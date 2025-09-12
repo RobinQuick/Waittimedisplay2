@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contrôle — Quick</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png" />
+  <style>
+    :root{ --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff; --glass:rgba(255,255,255,.08); --line:rgba(255,255,255,.22) }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; color:var(--q-white);
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+      background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
+      display:flex; flex-direction:column; gap:clamp(10px,2vh,20px)
+    }
+
+    /* barre marque */
+    .brand{display:flex;align-items:center;gap:12px;justify-content:center;padding:clamp(10px,2.5vh,24px)}
+    .brand .logo{background:#fff;border-radius:16px;padding:6px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+    .brand img{height:clamp(52px,7vh,90px);width:auto}
+    .brand .wordmark{font-weight:900;font-size:clamp(20px,3vh,34px)}
+
+    /* layout 2 colonnes */
+    .shell{display:grid; grid-template-columns: 1.15fr 1fr; gap:18px; padding:0 3vw 3vh}
+    @media (max-width:1100px){ .shell{ grid-template-columns: 1fr; } }
+
+    .card{
+      background:var(--glass); backdrop-filter:blur(10px);
+      border:1.5px solid var(--line); border-radius:20px;
+      box-shadow:0 20px 50px rgba(0,0,0,.25);
+      padding:clamp(16px,2.2vh,24px);
+    }
+    h1{margin:0 0 10px 0; font-size:clamp(20px,3.2vh,28px)}
+    h2{margin:12px 0 8px; font-size:clamp(16px,2.4vh,22px); opacity:.95}
+
+    /* section réglage minutes */
+    .row{display:flex; gap:10px; align-items:center}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:.9rem 1.1rem; border:0; border-radius:12px;
+      background:var(--q-white); color:var(--q-red-dark);
+      font-weight:800; cursor:pointer; transition:transform .04s ease, box-shadow .2s ease;
+      box-shadow:0 6px 16px rgba(0,0,0,.25); user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.ghost{
+      background:rgba(255,255,255,.12); color:#fff; border:1px solid var(--line); box-shadow:none;
+    }
+
+    input[type="number"], input[type="password"]{
+      flex:1; padding:.85rem 1rem; border-radius:12px;
+      border:1px solid rgba(255,255,255,.25);
+      background:rgba(0,0,0,.25); color:#fff; font-size:1.05rem; outline:none; min-height:46px;
+    }
+    input::placeholder{color:#ddd}
+
+    /* slider minutes */
+    .slider-wrap{margin:10px 0 4px}
+    input[type="range"]{
+      -webkit-appearance:none; width:100%; height:10px; border-radius:999px; background:rgba(255,255,255,.18); outline:none;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+      background:#fff; box-shadow:0 6px 14px rgba(0,0,0,.25); border:2px solid rgba(0,0,0,.05);
+    }
+
+    /* presets */
+    .presets{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      background:rgba(0,0,0,.22); border:1px solid var(--line); color:#fff;
+      padding:.45rem .8rem; border-radius:999px; font-weight:700; cursor:pointer;
+    }
+    .chip:hover{background:rgba(255,255,255,.12)}
+
+    /* tuiles produits */
+    .tiles{
+      display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      margin-top:8px;
+    }
+    .tile{
+      user-select:none; cursor:pointer; text-align:center;
+      padding:12px 10px; border-radius:14px; border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.20); font-weight:700;
+      transition: transform .08s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+    }
+    .tile:hover{ transform: translateY(-2px) }
+    .tile.active{ background:#fff; color:#B7161B; box-shadow:0 14px 28px rgba(0,0,0,.28); border-color:transparent }
+    .tile img{
+      max-height:70px; width:auto; display:block; margin:0 auto 8px;
+      background:#fff; border-radius:10px; padding:6px; box-shadow:0 6px 16px rgba(0,0,0,.25);
+    }
+    .tiles.disabled{ opacity:.55; pointer-events:none; }
+
+    .switch{display:flex; align-items:center; gap:10px; margin:.6rem 0}
+    .switch input{ width:20px; height:20px }
+
+    /* panneau aperçu live */
+    .preview{
+      position:relative; overflow:hidden; display:grid; place-items:center; min-height:260px;
+    }
+    .preview .frame{
+      width:100%; height:70vh; min-height:420px; border:0; border-radius:14px; transform: scale(.6);
+      transform-origin: top center; box-shadow:0 20px 50px rgba(0,0,0,.35);
+      pointer-events:none; /* protection : l’opérateur ne clique pas dedans */
+    }
+    .hint{opacity:.85; font-size:.95rem; margin-top:8px}
+
+    /* toast */
+    .toast{
+      position:fixed; right:24px; bottom:24px; z-index:9;
+      background:#101010cc; color:#fff; padding:.9rem 1rem; border-radius:12px;
+      border:1px solid rgba(255,255,255,.18); box-shadow:0 14px 28px rgba(0,0,0,.35);
+      transform: translateY(12px); opacity:0; pointer-events:none; transition:.25s ease;
+    }
+    .toast.show{ transform:none; opacity:1 }
+
+    /* aide raccourcis */
+    .kbd{background:#00000033; border:1px solid #ffffff33; padding:2px 6px; border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  </style>
+</head>
+<body>
+  <header class="brand">
+    <div class="logo"><img src="/static/quick-logo.jpg" alt="Quick" /></div>
+    <div class="wordmark">Quick — Contrôle</div>
+  </header>
+
+  <main class="shell">
+    <!-- COLONNE GAUCHE : CONTROLS -->
+    <section class="card">
+      <h1>Temps d’attente</h1>
+
+      <h2>Réglage rapide</h2>
+      <div class="row">
+        <button class="btn" id="dec5">-5</button>
+        <button class="btn" id="dec1">-1</button>
+        <input id="val" type="number" value="{{ initial }}" min="0" step="1"/>
+        <button class="btn" id="inc1">+1</button>
+        <button class="btn" id="inc5">+5</button>
+      </div>
+
+      <div class="slider-wrap">
+        <input id="range" type="range" min="0" max="180" value="{{ initial }}" />
+      </div>
+      <div class="presets">
+        <button class="chip" data-set="5">5 min</button>
+        <button class="chip" data-set="10">10 min</button>
+        <button class="chip" data-set="15">15 min</button>
+        <button class="chip" data-set="20">20 min</button>
+        <button class="chip" data-set="30">30 min</button>
+      </div>
+
+      <h2 style="margin-top:14px">Offre</h2>
+      <div class="switch">
+        <input type="checkbox" id="autoOffer" {{ 'checked' if auto_offer else '' }}/>
+        <label for="autoOffer">Offre auto selon l’heure</label>
+      </div>
+
+      <div class="tiles" id="tiles">
+        <div class="tile" data-offer="un muffin choco banane">
+          <img src="/static/products/muffinchocobanane.png" alt="Muffin choco banane"><small>Muffin choco banane</small>
+        </div>
+        <div class="tile" data-offer="un cookie trio choco">
+          <img src="/static/products/cookietriochoco.png" alt="Cookie trio choco"><small>Cookie trio choco</small>
+        </div>
+        <div class="tile" data-offer="un expresso">
+          <img src="/static/products/expresso.png" alt="Expresso"><small>Expresso</small>
+        </div>
+        <div class="tile" data-offer="un trio de beignets">
+          <img src="/static/products/trio.png" alt="Trio de beignets"><small>Trio de beignets</small>
+        </div>
+        <div class="tile" data-offer="un Bigout choco">
+          <img src="/static/products/bigout_choco.png" alt="Bigout choco"><small>Bigout choco</small>
+        </div>
+        <div class="tile" data-offer="des churros">
+          <img src="/static/products/churros.jpg" alt="Churros"><small>Churros</small>
+        </div>
+        <div class="tile" data-offer="un fondant choco">
+          <img src="/static/products/fondant.jpg" alt="Fondant choco"><small>Fondant choco</small>
+        </div>
+      </div>
+
+      <h2 style="margin-top:14px">Validation</h2>
+      <div class="row">
+        <input id="pin" type="password" placeholder="PIN (facultatif)" />
+        <button class="btn" id="save">Enregistrer</button>
+        <button class="btn ghost" id="saveOffer">Sauver l’offre seule</button>
+      </div>
+
+      <p class="hint">Raccourcis : <span class="kbd">←</span>/<span class="kbd">→</span> = -/+ 1 •
+        <span class="kbd">Shift</span>+<span class="kbd">←/→</span> = -/+ 5 •
+        <span class="kbd">Enter</span> = Enregistrer</p>
+    </section>
+
+    <!-- COLONNE DROITE : APERÇU LIVE -->
+    <aside class="card preview">
+      <h1 style="margin-bottom:8px">Aperçu live</h1>
+      <iframe class="frame" src="/display"></iframe>
+      <p class="hint">Aperçu non interactif (sécurisé). Le display réel se met à jour en temps réel.</p>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast">✅ Mis à jour</div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+    const val = $('#val');
+    const range = $('#range');
+    const autoOffer = $('#autoOffer');
+    const tilesWrap = $('#tiles');
+    const toast = $('#toast');
+
+    // --- utilitaires ---
+    function showToast(msg='✅ Mis à jour'){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(()=> toast.classList.remove('show'), 1600);
+    }
+    function setValue(n){
+      n = Math.max(0, Math.min(180, parseInt(n||'0',10)));
+      val.value = n;
+      range.value = n;
+    }
+    function activeTile(){ return $('.tile.active'); }
+
+    // --- boutons +/- avec auto-répétition au maintien ---
+    function holdButton(btn, delta){
+      let timer=null;
+      const step = ()=> setValue(parseInt(val.value||'0',10)+delta);
+      btn.addEventListener('mousedown', ()=>{ step(); timer=setInterval(step, 120); });
+      ['mouseup','mouseleave','blur'].forEach(ev=> btn.addEventListener(ev, ()=>{ if(timer) clearInterval(timer), timer=null; }));
+      btn.addEventListener('touchstart', e=>{ e.preventDefault(); step(); timer=setInterval(step, 120); }, {passive:false});
+      btn.addEventListener('touchend', ()=>{ if(timer) clearInterval(timer), timer=null; });
+    }
+    holdButton($('#dec5'), -5);
+    holdButton($('#dec1'), -1);
+    holdButton($('#inc1'), +1);
+    holdButton($('#inc5'), +5);
+
+    // --- slider / input sync ---
+    val.addEventListener('input', e=> setValue(e.target.value));
+    range.addEventListener('input', e=> setValue(e.target.value));
+
+    // --- presets ---
+    $$('.chip').forEach(c=> c.addEventListener('click', ()=> setValue(c.dataset.set)));
+
+    // --- tuiles produits ---
+    $$('.tile').forEach(t => t.addEventListener('click', ()=>{
+      $$('.tile').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      autoOffer.checked = false;               // choix manuel => coupe l'auto
+      tilesWrap.classList.remove('disabled');
+    }));
+    // état initial (auto -> griser tuiles, sinon pré-sélection)
+    (function initTiles(){
+      if ({{ 'true' if auto_offer else 'false' }}) {
+        tilesWrap.classList.add('disabled');
+      } else {
+        const prefer = ({{ (offer or '') | tojson }} || '').toLowerCase();
+        const pick = $$('.tile').find(x => prefer && prefer.split(' ').some(k => x.dataset.offer.toLowerCase().includes(k))) || $('.tile');
+        if (pick) pick.classList.add('active');
+      }
+    })();
+    autoOffer.addEventListener('change', ()=>{
+      if(autoOffer.checked){
+        $$('.tile').forEach(x => x.classList.remove('active'));
+        tilesWrap.classList.add('disabled');
+      } else tilesWrap.classList.remove('disabled');
+    });
+
+    // --- API calls ---
+    async function post(url, fd){ await fetch(url, {method:'POST', body:fd}); }
+
+    async function saveWait(){
+      const fd = new FormData();
+      fd.append('value', val.value);
+      const pin = $('#pin').value;
+      if (pin) fd.append('pin', pin);
+      await post('/wait', fd);
+    }
+    async function saveOffer(){
+      if (autoOffer.checked){
+        const fd = new FormData(); fd.append('enabled','true');
+        await post('/auto_offer', fd);
+      } else {
+        const act = activeTile();
+        if (act){
+          const fd = new FormData(); fd.append('value', act.dataset.offer);
+          await post('/offer', fd);
+        }
+      }
+    }
+
+    // Enregistrer global
+    $('#save').addEventListener('click', async ()=>{
+      await saveWait(); await saveOffer(); showToast();
+      // force refresh de l’aperçu sans interaction (il se met déjà à jour, mais on “ping”)
+      const f = document.querySelector('.frame'); f.contentWindow.location.reload();
+    });
+    $('#saveOffer').addEventListener('click', async ()=>{
+      await saveOffer(); showToast('✅ Offre mise à jour');
+      const f = document.querySelector('.frame'); f.contentWindow.location.reload();
+    });
+
+    // raccourcis clavier
+    window.addEventListener('keydown', (e)=>{
+      if (e.key === 'ArrowRight') { setValue(parseInt(val.value||'0',10) + (e.shiftKey?5:1)); }
+      if (e.key === 'ArrowLeft')  { setValue(parseInt(val.value||'0',10) - (e.shiftKey?5:1)); }
+      if (e.key === 'Enter') { $('#save').click(); }
+    });
+
+    // init
+    setValue({{ initial }});
+  </script>
+</body>
+</html>

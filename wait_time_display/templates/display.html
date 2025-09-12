@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Temps d'attente — Quick</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png" />
+  <style>
+    :root{ --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff; }
+
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; background:var(--q-red);
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+      display:grid; place-items:center; color:var(--q-white);
+    }
+
+    .stage{
+      position:relative; width:100%; height:100%;
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+      padding:2vh 2vw 4vh;
+      background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
+      overflow:hidden;
+    }
+
+    /* Calques premium (fond animé, watermark léger) */
+    .watermark{
+      position:absolute; inset:0;
+      background: url("/static/quick-logo.png") no-repeat center 20%;
+      background-size: min(32vw, 320px);
+      opacity:.08; filter: blur(1px) contrast(120%);
+      pointer-events:none; z-index:0;
+    }
+    .sheen{
+      position:absolute; inset:-10%;
+      background: conic-gradient(from 220deg at 50% 40%,
+        rgba(255,255,255,.10), rgba(255,255,255,0) 25%,
+        rgba(255,255,255,.08) 50%, rgba(255,255,255,0) 75%,
+        rgba(255,255,255,.10));
+      mix-blend-mode: screen;
+      animation: sweep 24s linear infinite;
+      opacity:.18; z-index:0; pointer-events:none;
+    }
+    @keyframes sweep{ to{ transform: rotate(360deg) } }
+
+    /* En-tête */
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:2vh;position:relative;z-index:2}
+    .brand img{height: clamp(50px,7vh,90px);width:auto;display:block}
+    .brand .wordmark{font-weight:900;font-size:clamp(20px,2.8vh,32px)}
+
+    /* Carte centrale + balayage lumineux */
+    .panel{
+      position:relative; z-index:2;
+      background:rgba(255,255,255,.08);
+      backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.22);
+      border-radius:20px;
+      padding:clamp(20px,3vh,40px) clamp(28px,4vw,48px);
+      text-align:center;
+      box-shadow:
+        0 28px 60px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.12);
+      max-width:1100px; width:min(92vw,1100px);
+      overflow:hidden;
+    }
+    /* film de lumière qui balaye la carte */
+    .panel::after{
+      content:""; position:absolute; inset:-40%; z-index:-1;
+      background: linear-gradient(75deg, transparent 40%, rgba(255,255,255,.12) 50%, transparent 60%);
+      transform:translateX(-30%) rotate(8deg);
+      animation: panelSweep 9s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes panelSweep{
+      0%,10% { transform:translateX(-30%) rotate(8deg) }
+      50%    { transform:translateX(30%)  rotate(8deg) }
+      100%   { transform:translateX(-30%) rotate(8deg) }
+    }
+
+    .headline{font-size:clamp(20px,3.5vh,28px);margin-bottom:1vh;font-weight:700}
+
+    /* Valeur principale avec flip + cercle countdown */
+    .valueWrap{ position:relative; display:inline-grid; place-items:center; margin:8px auto 6px }
+    .value{font-size:clamp(90px,16vh,180px);font-weight:900;line-height:1}
+    .flip{ animation: flipAnim .65s cubic-bezier(.2,.8,.2,1) forwards }
+    @keyframes flipAnim{
+      0%{ transform: rotateX(0) scale(1); opacity:1 }
+      45%{ transform: rotateX(-95deg) scale(.98); opacity:.25 }
+      100%{ transform: rotateX(0) scale(1); opacity:1 }
+    }
+    /* anneau de compte à rebours (affiché si <=3 min) */
+    .ring{ position:absolute; width:1em; height:1em; inset:0; margin:auto; transform:scale(1.25); }
+    .ring svg{ width:100%; height:100% }
+    .ring circle{ fill:none; stroke:#fff; stroke-opacity:.55; stroke-width:12; }
+    .ring circle.progress{ stroke:rgba(255,255,255,.95); stroke-linecap:round; transition:stroke-dashoffset .4s linear }
+
+    .unit{font-size:clamp(24px,4vh,40px);font-weight:800;margin-bottom:6px}
+
+    /* Offre avec image qui flotte doucement */
+    .offer{
+      margin-top:clamp(12px,2vh,22px);
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:.75rem; flex-wrap:wrap; max-width: 92%; margin-inline:auto;
+      font-weight:600;
+    }
+    .offer-img{
+      height:clamp(56px,8vh,92px);
+      width:auto; border-radius:14px; background:#fff; padding:6px;
+      box-shadow:0 10px 24px rgba(0,0,0,.28); outline:1px solid rgba(0,0,0,.06);
+      animation: float 4.5s ease-in-out infinite;
+    }
+    @keyframes float{
+      0%,100%{ transform:translateY(0) }
+      50%{ transform:translateY(-4px) }
+    }
+
+    /* Pied */
+    .footer{margin-top:auto;font-size:.9rem;display:flex;gap:12px;z-index:2;position:relative}
+    .badge{ background:rgba(0,0,0,.25); padding:6px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.2); }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <div class="watermark"></div>
+    <div class="sheen"></div>
+
+    <header class="brand">
+      <img src="/static/quick-logo.jpg" alt="Quick logo" />
+      <div class="wordmark">Quick</div>
+    </header>
+
+    <section id="panel" class="panel">
+      <div class="headline">Ici vous serez servi en</div>
+
+      <div class="valueWrap">
+        <div id="val" class="value">{{ initial }}</div>
+        <!-- anneau countdown (caché par défaut via JS si >3) -->
+        <div class="ring" id="ring" style="display:none">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="0"></circle>
+            <circle class="progress" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+          </svg>
+        </div>
+      </div>
+
+      <div class="unit" id="unit">minutes</div>
+
+      <div id="offer" class="offer">
+        <span id="offerText">Sinon, on vous offre {{ offer or "un café" }}</span>
+        <img id="offerImg" src="/static/products/expresso.png" alt="Produit offert" class="offer-img">
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="badge">Affichage temps réel</div>
+      <div class="badge">Dernière mise à jour : <span id="last">–</span></div>
+    </footer>
+  </main>
+
+  <script>
+    const valueEl = document.getElementById("val");
+    const unitEl  = document.getElementById("unit");
+    const offerEl = document.getElementById("offerText");
+    const offerImg= document.getElementById("offerImg");
+    const lastEl  = document.getElementById("last");
+    const ringEl  = document.getElementById("ring");
+    const ringProg= ringEl?.querySelector("circle.progress");
+
+    // map texte -> image produit (selon tes fichiers)
+    const imgForOffer = (txt)=>{
+      const t = (txt||"").toLowerCase();
+      if(t.includes("muffin")) return "/static/products/muffinchocobanane.png";
+      if(t.includes("cookie")) return "/static/products/cookietriochoco.png";
+      if(t.includes("café")||t.includes("expresso")) return "/static/products/expresso.png";
+      if(t.includes("beignet")||t.includes("trio")) return "/static/products/trio.png";
+      if(t.includes("bigout")) return "/static/products/bigout_choco.png";
+      if(t.includes("churros")) return "/static/products/churros.jpg";
+      if(t.includes("fondant")) return "/static/products/fondant.jpg";
+      return "/static/products/expresso.png";
+    };
+
+    function setOffer(txt){
+      if(!txt) return;
+      txt = txt.replace(/espresso/i,'expresso'); // normalisation
+      offerEl.textContent = "Sinon, on vous offre " + txt;
+      offerImg.src = imgForOffer(txt);
+      offerImg.alt = "Produit offert : " + txt;
+    }
+
+    // auto-scale pour gros nombres
+    function autoScaleValue(){
+      const n = parseInt(valueEl.textContent||"0",10);
+      valueEl.style.fontSize =
+        n < 10 ? 'min(20vh, 220px)' :
+        n < 30 ? 'min(17vh, 200px)' :
+                 'min(15vh, 180px)';
+    }
+
+    // petit flip + mise à jour unité + timestamp
+    function setValue(n){
+      const current = parseInt(valueEl.textContent||"0",10);
+      if(n !== current){
+        valueEl.textContent = String(n);
+        valueEl.classList.add("flip");
+        setTimeout(()=> valueEl.classList.remove("flip"), 700);
+      }
+      unitEl.textContent = (n===1 ? "minute" : "minutes");
+      autoScaleValue();
+      lastEl.textContent = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      toggleCountdown(n);
+    }
+
+    // Compte à rebours circulaire quand ≤ 3 min
+    let countdownTimer = null;
+    function toggleCountdown(n){
+      if(n <= 3 && n > 0){
+        ringEl.style.display = "block";
+        startCountdown(n * 60); // secondes
+      }else{
+        ringEl.style.display = "none";
+        if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
+        if(ringProg) ringProg.style.strokeDashoffset = 264;
+      }
+    }
+    function startCountdown(totalSec){
+      if(countdownTimer){ clearInterval(countdownTimer); }
+      let remaining = totalSec;
+      const CIRC = 264; // périmètre ~ 2πr
+      countdownTimer = setInterval(()=>{
+        remaining = Math.max(0, remaining - 1);
+        const ratio = remaining / totalSec; // 1 -> 0
+        if(ringProg) ringProg.style.strokeDashoffset = CIRC * (1 - ratio);
+        if(remaining === 0){ clearInterval(countdownTimer); countdownTimer=null; }
+      }, 1000);
+    }
+
+    // SSE live
+    function connect(){
+      const evt = new EventSource("/stream");
+      evt.onmessage = (ev)=>{
+        const [val, off] = String(ev.data||"").split("|");
+        const n = parseInt(val||"0", 10);
+        if(!Number.isNaN(n)) setValue(n);
+        if(off) setOffer(off);
+      };
+      evt.onerror = ()=>{ evt.close(); setTimeout(connect, 1500); };
+    }
+
+    // init
+    autoScaleValue();
+    connect();
+  </script>
+</body>
+</html>
