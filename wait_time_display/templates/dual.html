@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Temps d'attente — Quick (Dual)</title>
+<link rel="icon" type="image/png" href="/static/favicon.png" />
+<style>
+  :root{ --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff; }
+  *{box-sizing:border-box} html,body{height:100%}
+  .hidden{display:none !important;}
+  body{ margin:0; color:var(--q-white); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+        background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
+        display:grid; place-items:center; }
+  .stage{position:relative; width:100%; height:100%; display:grid; grid-template-rows:auto 1fr auto; padding:2vh 2vw; overflow:hidden;}
+  .brand{display:flex; align-items:center; justify-content:center; margin-bottom:1.5vh; z-index:5}
+  .brand img{height: clamp(46px,7vh,96px); width:auto; display:block}
+  .side-logo{ position:absolute; top:50%; transform:translateY(-50%); z-index:4; pointer-events:none; }
+  .left{ left:1.5vw } .right{ right:1.5vw }
+  .side-logo img{ height: min(28vw, 340px) }
+  .panel{ position:relative; z-index:1; height:100%; width:100%; border-radius:22px; background:rgba(255,255,255,.06);
+          border:1px solid rgba(255,255,255,.18); backdrop-filter: blur(10px);
+          box-shadow: 0 28px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
+          overflow:hidden; padding:3vh 3vw; display:flex; align-items:center; justify-content:center; }
+  .timeWrap{width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:space-evenly; text-align:center;}
+  .headline{font-weight:800; letter-spacing:.3px; opacity:.98; font-size: clamp(24px, 5.2vh, 6vh);}
+  .value{font-weight:900; line-height:1; letter-spacing:-.02em; font-size: clamp(120px, 34vh, 40vh); text-shadow: 0 10px 28px rgba(0,0,0,.25);}
+  .unit{font-weight:900; font-size: clamp(30px, 8.5vh, 10vh); margin-top: .5vh;}
+  .offer{display:inline-flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; max-width:92%;
+         font-weight:700; text-align:center; font-size: clamp(18px, 3.4vh, 4.6vh);}
+  .offer-img{height: clamp(100px, 14vh, 20vh); width:auto; border-radius:16px; background:#fff; padding:8px;
+             box-shadow:0 14px 30px rgba(0,0,0,.35); outline:1px solid rgba(0,0,0,.06);}
+  .footer{display:flex; justify-content:center; gap:12px; margin-top:1.2vh; font-size:clamp(12px,1.8vh,2.2vh); opacity:.9}
+  .badge{ background:rgba(0,0,0,.25); padding:.6em 1em; border-radius:12px; border:1px solid rgba(255,255,255,.2) }
+</style>
+</head>
+<body>
+  <main class="stage">
+    <div class="side-logo left"><img src="/static/quick-logo.jpg" alt=""></div>
+    <div class="side-logo right"><img src="/static/quick-logo.jpg" alt=""></div>
+
+    <header class="brand"><img src="/static/quick-logo.jpg" alt="Quick" /></header>
+
+    <section class="panel">
+      <div id="timeWrap" class="timeWrap">
+        <div class="headline">Ici vous serez servi en</div>
+        <div id="val" class="value">{{ initial }}</div>
+        <div class="unit" id="unit">minutes</div>
+        <div id="offerWrap" class="offer {{ '' if (offer and show_offer) else 'hidden' }}">
+          <span id="offerText"></span>
+          <img id="offerImg" src="/static/products/expresso.png" alt="Produit offert" class="offer-img">
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="badge">Affichage temps réel</div>
+      <div class="badge">Dernière mise à jour : <span id="last">–</span></div>
+    </footer>
+  </main>
+
+  <script>
+    const valueEl  = document.getElementById("val");
+    const unitEl   = document.getElementById("unit");
+    const offerWrap= document.getElementById("offerWrap");
+    const offerEl  = document.getElementById("offerText");
+    const offerImg = document.getElementById("offerImg");
+    const lastEl   = document.getElementById("last");
+
+    const imgForOffer = (txt)=>{
+      const t=(txt||"").toLowerCase();
+      if(t.includes("muffin")) return "/static/products/muffinchocobanane.png";
+      if(t.includes("cookie")) return "/static/products/cookietriochoco.png";
+      if(t.includes("café")||t.includes("expresso")) return "/static/products/expresso.png";
+      if(t.includes("beignet")||t.includes("trio")) return "/static/products/trio.png";
+      if(t.includes("bigout")) return "/static/products/bigout_choco.png";
+      if(t.includes("churros")) return "/static/products/churros.jpg";
+      if(t.includes("fondant")) return "/static/products/fondant.jpg";
+      return "/static/products/expresso.png";
+    };
+
+    function setOffer(txt, show){
+      txt = (txt ?? "").trim();
+      if(!txt || !show){ offerWrap.classList.add('hidden'); return; }
+      offerWrap.classList.remove('hidden');
+      offerEl.textContent = "Sinon, on vous offre " + txt.replace(/espresso/i,'expresso');
+      offerImg.src = imgForOffer(txt);
+      offerImg.alt = "Produit offert : " + txt;
+    }
+    function setValue(n){
+      valueEl.textContent = String(n);
+      unitEl.textContent = (n===1 ? "minute" : "minutes");
+      lastEl.textContent = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    }
+
+    function connect(){
+      const evt = new EventSource("/stream");
+      evt.onmessage = (ev)=>{
+        const parts = String(ev.data||"").split("|");
+        const w    = parts[0] ?? "0";
+        const off  = parts[1] ?? "";
+        const mode = parts[2] ?? "dual";
+        const show = parts[3] ?? "1";
+        if (mode !== "dual"){ window.location.href = "/screen"; return; }
+        const n = parseInt(w,10); if(!Number.isNaN(n)) setValue(n);
+        setOffer(off, show === "1");
+      };
+      evt.onerror = ()=>{ evt.close(); setTimeout(connect, 1200); };
+    }
+
+    setOffer({{ (offer or '') | tojson }}, {{ 'true' if show_offer else 'false' }});
+    connect();
+  </script>
+</body>
+</html>
