@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Logo — Quick</title>
+<link rel="icon" type="image/png" href="/static/favicon.png" />
+<style>
+  :root{ --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff; }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{ margin:0; background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%); display:grid; place-items:center; overflow:hidden; }
+  .arena{ position:relative; width:100%; height:100%; display:grid; place-items:center; }
+  .logo{ position:absolute; width:min(38vw, 420px); aspect-ratio:1/1; will-change: transform;
+         animation: drift 22s linear infinite alternate, float 4.5s ease-in-out infinite;
+         filter: drop-shadow(0 20px 40px rgba(0,0,0,.35)); }
+  @keyframes drift{ 0%{ transform: translate(5vw,5vh) } 25%{ transform: translate(55vw,10vh) } 50%{ transform: translate(60vw,65vh) } 75%{ transform: translate(8vw,70vh) } 100%{ transform: translate(5vw,5vh) } }
+  @keyframes float{ 0%,100%{ translate:0 0 } 50%{ translate:0 -8px } }
+</style>
+</head>
+<body>
+  <div class="arena">
+    <img class="logo" src="/static/quick-logo.jpg" alt="Quick" />
+  </div>
+
+  <script>
+    // Si le mode n'est plus "logo", on bascule automatiquement vers /screen
+    (function followMode(){
+      const es = new EventSource('/stream');
+      es.onmessage = (e)=>{ const parts = String(e.data||'').split('|'); const mode = parts[2]||'time'; if(mode!=='logo'){ window.location.href='/screen'; } };
+      es.onerror = ()=>{ es.close(); setTimeout(followMode, 1200); };
+    })();
+  </script>
+</body>
+</html>
