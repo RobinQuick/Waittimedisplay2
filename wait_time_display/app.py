@@ -1,14 +1,55 @@
 import os, asyncio
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse, StreamingResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.background import BackgroundTask
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
 app = FastAPI(title="QSR Wait Time", version="1.0.0")
+
+# --- MIDDLEWARE CRITIQUE POUR SAMSUNG TIZEN ---
+# CORS pour Tizen
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"]
+)
+
+# Trusted hosts pour Render
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*"]  # Accepte tous les hosts
+)
+
+# Middleware custom pour headers Samsung
+class TizenHeaderMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        # Headers critiques pour Samsung Tizen
+        response.headers["X-Frame-Options"] = "ALLOWALL"
+        response.headers["Content-Security-Policy"] = "frame-ancestors *;"
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        
+        # Pour SSE
+        if request.url.path == "/stream":
+            response.headers["X-Accel-Buffering"] = "no"
+            response.headers["Connection"] = "keep-alive"
+            
+        return response
+
+app.add_middleware(TizenHeaderMiddleware)
 
 # --- TEMPLATES & STATIC ---
 templates = Jinja2Templates(directory="templates")
@@ -30,8 +71,110 @@ def _payload() -> str:
 async def notify():
     """Diffuse l'état courant à tous les clients."""
     msg = _payload()
+    dead_queues = []
     for q in list(listeners):
-        await q.put(msg)
+        try:
+            await q.put(msg)
+        except:
+            dead_queues.append(q)
+    # Nettoyer les queues mortes
+    for q in dead_queues:
+        listeners.discard(q)
+
+# --- HEALTH CHECKS POUR RENDER ---
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "timestamp": time.time()}
+
+@app.get("/ping")
+async def ping():
+    return Response(content="pong", media_type="text/plain")
+
+# --- PAGE DE TEST POUR SAMSUNG ---
+@app.get("/test", response_class=HTMLResponse)
+async def test_page():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Samsung Test</title>
+        <style>
+            body {
+                margin: 0;
+                background: #E31E24;
+                color: white;
+                font-family: Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                font-size: 3em;
+            }
+            #status { 
+                margin-top: 20px; 
+                font-size: 0.5em;
+                padding: 20px;
+                background: rgba(0,0,0,0.3);
+                border-radius: 10px;
+            }
+            .ok { color: #4CAF50; }
+            .error { color: #f44336; }
+        </style>
+    </head>
+    <body>
+        <h1>Quick Display Test ✓</h1>
+        <div id="status">
+            <div>Time: <span id="time"></span></div>
+            <div>Connection: <span id="connection">Testing...</span></div>
+            <div>SSE: <span id="sse">Waiting...</span></div>
+            <div>URL: <span id="url" style="font-size: 0.6em;"></span></div>
+        </div>
+        <script>
+            // Afficher l'URL
+            document.getElementById('url').textContent = window.location.href;
+            
+            // Afficher l'heure
+            setInterval(() => {
+                document.getElementById('time').textContent = new Date().toLocaleTimeString();
+            }, 1000);
+            
+            // Test de connexion basique
+            fetch('/ping')
+                .then(() => {
+                    document.getElementById('connection').textContent = 'OK ✓';
+                    document.getElementById('connection').className = 'ok';
+                })
+                .catch(e => {
+                    document.getElementById('connection').textContent = 'Failed ✗';
+                    document.getElementById('connection').className = 'error';
+                });
+            
+            // Test SSE
+            try {
+                const evt = new EventSource('/stream');
+                evt.onopen = () => {
+                    document.getElementById('sse').textContent = 'Connected ✓';
+                    document.getElementById('sse').className = 'ok';
+                };
+                evt.onmessage = (e) => {
+                    document.getElementById('sse').textContent = 'Receiving data ✓';
+                    document.getElementById('sse').className = 'ok';
+                };
+                evt.onerror = () => {
+                    document.getElementById('sse').textContent = 'Error ✗';
+                    document.getElementById('sse').className = 'error';
+                };
+            } catch(e) {
+                document.getElementById('sse').textContent = 'Not supported';
+                document.getElementById('sse').className = 'error';
+            }
+        </script>
+    </body>
+    </html>
+    """
 
 # --- PAGES ---
 @app.get("/", include_in_schema=False)
@@ -124,28 +267,61 @@ async def set_mode(value: str = Form(...), pin: str = Form(None)):
 async def set_auto(enabled: str = Form(None), pin: str = Form(None)):
     global AUTO_OFFER
     AUTO_OFFER = bool(enabled)
-    # (on ne calcule pas ici de logique horaire – à implémenter si besoin)
     await notify()
     return {"ok": True, "auto_offer": AUTO_OFFER}
 
-# --- SSE ---
+# --- SSE OPTIMISÉ POUR RENDER + TIZEN ---
 @app.get("/stream")
 async def stream():
-    async def gen(q: asyncio.Queue):
-        # push initial
-        yield _payload()
+    async def generate():
+        q = asyncio.Queue()
+        listeners.add(q)
+        
         try:
+            # Envoyer l'état initial immédiatement
+            yield _payload()
+            # Envoyer un retry pour la reconnexion
+            yield f"retry: 3000\n\n"
+            # Heartbeat initial
+            yield f": heartbeat\n\n"
+            
             while True:
-                data = await q.get()
-                yield data
+                try:
+                    # Attendre un message avec timeout pour heartbeat
+                    data = await asyncio.wait_for(q.get(), timeout=20.0)
+                    yield data
+                except asyncio.TimeoutError:
+                    # Envoyer un heartbeat si pas de données
+                    yield f": heartbeat\n\n"
+                    
         except asyncio.CancelledError:
-            pass
-
-    q: asyncio.Queue = asyncio.Queue()
-    listeners.add(q)
-
+            listeners.discard(q)
+        finally:
+            listeners.discard(q)
+    
     return StreamingResponse(
-        gen(q),
+        generate(),
         media_type="text/event-stream",
-        background=BackgroundTask(lambda: listeners.discard(q)),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive"
+        }
+    )
+
+# Point d'entrée pour Render
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    # Configuration pour production
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=port,
+        # Désactiver le reload en production
+        reload=False,
+        # Workers = 1 pour SSE
+        workers=1,
+        # Timeout plus long pour SSE
+        timeout_keep_alive=75
     )

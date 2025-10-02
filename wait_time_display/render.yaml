@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: waittimedisplay2
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-keep-alive 75
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: WAIT_TIME
+        value: "5"
+      - key: OFFER
+        value: "un expresso"
+      - key: MODE
+        value: "time"
+      - key: SHOW_OFFER
+        value: "1"
+    healthCheckPath: /health
+    plan: free
+    # Headers personnalisés pour Samsung
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: ALLOWALL
+      - path: /*
+        name: Content-Security-Policy
+        value: "frame-ancestors *;"
+        
