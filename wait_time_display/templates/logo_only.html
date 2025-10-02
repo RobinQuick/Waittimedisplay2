@@ -7,27 +7,64 @@
 <link rel="icon" type="image/png" href="/static/favicon.png" />
 <style>
   :root{ --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff; }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{ margin:0; background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%); display:grid; place-items:center; overflow:hidden; }
-  .arena{ position:relative; width:100%; height:100%; display:grid; place-items:center; }
-  .logo{ position:absolute; width:min(38vw, 420px); aspect-ratio:1/1; will-change: transform;
-         animation: drift 22s linear infinite alternate, float 4.5s ease-in-out infinite;
-         filter: drop-shadow(0 20px 40px rgba(0,0,0,.35)); }
-  @keyframes drift{ 0%{ transform: translate(5vw,5vh) } 25%{ transform: translate(55vw,10vh) } 50%{ transform: translate(60vw,65vh) } 75%{ transform: translate(8vw,70vh) } 100%{ transform: translate(5vw,5vh) } }
-  @keyframes float{ 0%,100%{ translate:0 0 } 50%{ translate:0 -8px } }
+  *{ box-sizing:border-box }
+  html,body{ height:100% }
+  body{
+    margin:0;
+    background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
+    display:grid; place-items:center;
+    overflow:hidden;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  }
+
+  /* Plein écran, centre le contenu */
+  .arena{
+    position:fixed; inset:0;
+    display:grid; place-items:center;
+    padding:2vmin; /* léger bord de sécurité pour éviter tout collage bord écran */
+  }
+
+  /* Logo : ratio respecté, taille max, pas de drift = jamais hors écran */
+  .logo{
+    width:auto; height:auto;
+    max-width:min(60vw, 520px);
+    max-height:min(60vh, 520px);
+    display:block;
+    user-select:none; -webkit-user-drag:none;
+    image-rendering:auto;
+    filter: drop-shadow(0 18px 36px rgba(0,0,0,.32));
+    animation: float 4.8s ease-in-out infinite;
+  }
+
+  @keyframes float{
+    0%,100%{ transform: translateY(0) }
+    50%    { transform: translateY(-6px) }
+  }
+
+  /* Si l’utilisateur préfère moins d’animations */
+  @media (prefers-reduced-motion: reduce){
+    .logo{ animation: none }
+  }
 </style>
 </head>
 <body>
   <div class="arena">
-    <img class="logo" src="/static/quick-logo.jpg" alt="Quick" />
+    <img class="logo" src="/static/quick-logo.png" alt="Quick" decoding="async" />
   </div>
 
   <script>
-    // Si le mode n'est plus "logo", on bascule automatiquement vers /screen
+    // On garde ta logique : si le mode n'est plus "logo", on renvoie vers /screen
     (function followMode(){
       const es = new EventSource('/stream');
-      es.onmessage = (e)=>{ const parts = String(e.data||'').split('|'); const mode = parts[2]||'time'; if(mode!=='logo'){ window.location.href='/screen'; } };
-      es.onerror = ()=>{ es.close(); setTimeout(followMode, 1200); };
+      es.onmessage = (e)=>{
+        const parts = String(e.data||'').split('|');
+        const mode = parts[2]||'time';
+        if(mode!=='logo'){ window.location.href='/screen'; }
+      };
+      es.onerror = ()=>{
+        es.close();
+        setTimeout(followMode, 1200);
+      };
     })();
   </script>
 </body>

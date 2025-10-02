@@ -6,67 +6,273 @@
 <title>Temps d'attente — Quick (Dual)</title>
 <link rel="icon" type="image/png" href="/static/favicon.png" />
 <style>
-  :root{ --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff; }
-  *{box-sizing:border-box} html,body{height:100%}
+  :root{
+    --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff;
+    /* marge ultra-minime pour laisser voir le bord */
+    --gap-v: 4px; 
+    --gap-h: 4px;
+    --logoSideH: clamp(220px, 36vh, 440px); /* logos 2x plus grands */
+    --dim: 1;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
   .hidden{display:none !important;}
-  body{ margin:0; color:var(--q-white); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-        background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
-        display:grid; place-items:center; }
-  .stage{position:relative; width:100%; height:100%; display:grid; grid-template-rows:auto 1fr auto; padding:2vh 2vw; overflow:hidden;}
-  .brand{display:flex; align-items:center; justify-content:center; margin-bottom:1.5vh; z-index:5}
-  .brand img{height: clamp(46px,7vh,96px); width:auto; display:block}
-  .side-logo{ position:absolute; top:50%; transform:translateY(-50%); z-index:4; pointer-events:none; }
-  .left{ left:1.5vw } .right{ right:1.5vw }
-  .side-logo img{ height: min(28vw, 340px) }
-  .panel{ position:relative; z-index:1; height:100%; width:100%; border-radius:22px; background:rgba(255,255,255,.06);
-          border:1px solid rgba(255,255,255,.18); backdrop-filter: blur(10px);
-          box-shadow: 0 28px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
-          overflow:hidden; padding:3vh 3vw; display:flex; align-items:center; justify-content:center; }
-  .timeWrap{width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:space-evenly; text-align:center;}
-  .headline{font-weight:800; letter-spacing:.3px; opacity:.98; font-size: clamp(24px, 5.2vh, 6vh);}
-  .value{font-weight:900; line-height:1; letter-spacing:-.02em; font-size: clamp(120px, 34vh, 40vh); text-shadow: 0 10px 28px rgba(0,0,0,.25);}
-  .unit{font-weight:900; font-size: clamp(30px, 8.5vh, 10vh); margin-top: .5vh;}
-  .offer{display:inline-flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; max-width:92%;
-         font-weight:700; text-align:center; font-size: clamp(18px, 3.4vh, 4.6vh);}
-  .offer-img{height: clamp(100px, 14vh, 20vh); width:auto; border-radius:16px; background:#fff; padding:8px;
-             box-shadow:0 14px 30px rgba(0,0,0,.35); outline:1px solid rgba(0,0,0,.06);}
-  .footer{display:flex; justify-content:center; gap:12px; margin-top:1.2vh; font-size:clamp(12px,1.8vh,2.2vh); opacity:.9}
-  .badge{ background:rgba(0,0,0,.25); padding:.6em 1em; border-radius:12px; border:1px solid rgba(255,255,255,.2) }
+
+  /* ===== BACKGROUND global ===== */
+  body{
+    margin:0; color:var(--q-white);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
+  }
+  .stage{position:relative; width:100vw; height:100vh; overflow:hidden; filter:brightness(var(--dim));}
+
+  .panel{
+    position:absolute;
+    top:var(--gap-v); bottom:var(--gap-v);
+    left:var(--gap-h); right:var(--gap-h);
+    border-radius:22px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 28px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
+    display:flex; align-items:center; justify-content:center;
+    padding:2.4vh 3vw;
+    transform: translateZ(0);
+  }
+  /* Fond cyclique premium (projecteur lent) */
+  .panel::before{
+    content:"";
+    position:absolute; inset:-8% -4% -12% -8%; pointer-events:none;
+    background:
+      radial-gradient(40% 30% at var(--spot-x,20%) var(--spot-y,30%), rgba(255,255,255,.14), transparent 60%),
+      radial-gradient(60% 40% at 80% 10%, rgba(255,255,255,.06), transparent 70%);
+    mix-blend-mode: screen; opacity:.6; filter: blur(12px);
+    animation: spot 22s ease-in-out infinite alternate;
+  }
+  @keyframes spot{
+    0%  { --spot-x:20%; --spot-y:30%; }
+    100%{ --spot-x:75%; --spot-y:60%; }
+  }
+
+  /* Soft Pulse Borders (rétro-éclairage doux) */
+  .borderPulse{
+    position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.45) inset;
+    opacity:.35; animation: borderPulse 5s ease-in-out infinite;
+  }
+  @keyframes borderPulse{ 0%,100%{opacity:.25} 50%{opacity:.6} }
+
+  /* Glass Rain (traînées fines) */
+  .rain{ position:absolute; inset:0; border-radius:inherit; pointer-events:none; overflow:hidden; }
+  .rain::before{
+    content:""; position:absolute; inset:-30% 0 -30% 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,.16), rgba(255,255,255,0) 60%);
+    -webkit-mask: repeating-linear-gradient(
+      to right,
+      rgba(0,0,0,0) 0 20px,
+      rgba(0,0,0,1) 20px 21px
+    );
+            mask: repeating-linear-gradient(
+      to right,
+      rgba(0,0,0,0) 0 20px,
+      rgba(0,0,0,1) 20px 21px
+    );
+    opacity:.22; filter: blur(.2px);
+    animation: rainSlide 8s linear infinite;
+  }
+  @keyframes rainSlide{ from{ transform:translateY(-8%) } to{ transform:translateY(8%) } }
+
+  /* ===== Logos latéraux (pas de logo haut) ===== */
+  .brand-side{
+    position:absolute; top:50%; transform:translateY(-50%);
+    display:flex; align-items:center; justify-content:center;
+    z-index:3; pointer-events:none;
+  }
+  .brand-left{ left: max(10px, calc(var(--gap-h) + 4px)); }
+  .brand-right{ right: max(10px, calc(var(--gap-h) + 4px)); }
+  .brand-side img{ height: var(--logoSideH); width:auto; display:block; }
+
+  /* Flare ponctuel (ajouté/retiré en JS via .flare) */
+  .brand-side.flare::before{
+    content:""; position:absolute; width:160%; height:50%;
+    top:25%; left:-30%; pointer-events:none;
+    background: linear-gradient(120deg, rgba(255,255,255,0), rgba(255,255,255,.85), rgba(255,255,255,0));
+    filter: blur(12px); opacity:.5;
+    animation: logoFlare 1100ms ease-out;
+  }
+  @keyframes logoFlare{ from{ transform: translateX(-60%) rotate(10deg) } to{ transform: translateX(60%) rotate(10deg) } }
+
+  /* ===== Bloc central ===== */
+  .content{
+    /* réserve latérale pour que les logos ne “mangent” pas le texte sur petits écrans */
+    padding-left: clamp(0px, 10vw, 160px);
+    padding-right: clamp(0px, 10vw, 160px);
+    width:100%; height:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    gap: clamp(8px, 1.4vh, 2vh);
+  }
+
+  .headline{
+    font-weight:800; letter-spacing:.2px; opacity:.98;
+    line-height:1.12;
+    font-size: clamp(22px, 4.6vh, 5.2vh);
+  }
+  .headline .commit{ display:block; font-weight:900; }
+  .headline .lead{ display:block; font-weight:800; }
+
+  /* ===== Valeur + particules ===== */
+  .valueWrap{ position:relative; display:inline-grid; place-items:center; }
+  /* halo doux derrière le chiffre */
+  .valueWrap::before{
+    content:""; position:absolute; width:120%; height:120%; border-radius:50%;
+    background: radial-gradient(circle at 50% 50%,
+      rgba(255,255,255,.35), rgba(255,255,255,.18) 40%, rgba(255,255,255,0) 70%);
+    filter: blur(12px); opacity:.55;
+    animation: breathe 5.2s ease-in-out infinite;
+  }
+  @keyframes breathe{ 0%,100%{transform:scale(0.98)} 50%{transform:scale(1.04)} }
+
+  /* Canvas particules */
+  #particles{
+    position:absolute; inset:0; width:120%; height:120%;
+    transform: translateZ(0); pointer-events:none;
+  }
+
+  /* Valeur: chrono sportif + gradient fill à l’update */
+  .value{
+    font-weight:900; line-height:0.95; letter-spacing:.02em;
+    text-align:center; color:#fff;
+    text-shadow:
+      0 0 1px rgba(255,255,255,.9),
+      0 0 12px rgba(255,255,255,.7),
+      0 0 28px rgba(255,255,255,.45),
+      0 0 46px rgba(255,255,255,.25);
+    margin-top: clamp(2px, .6vh, .8vh);
+    will-change: transform;
+  }
+  .value.size-1{ font-size: clamp(110px, 29vh, 32vh); } /* 0–9 */
+  .value.size-2{ font-size: clamp(100px, 24vh, 26vh); } /* 10–99 */
+  .value.size-3{ font-size: clamp(90px, 20vh, 22vh); }  /* 100+   */
+
+  /* Gradient fill – appliqué ~600ms à l’update */
+  .value.gradient{
+    color: transparent;
+    background: linear-gradient(180deg, #ffffff 0%, #ffd0d0 40%, #ffffff 80%);
+    background-size: 100% 200%;
+    -webkit-background-clip:text; background-clip:text;
+    animation: gradFlow 600ms ease-out both;
+  }
+  @keyframes gradFlow{ from{ background-position: 0% 0% } to{ background-position: 0% 100% } }
+
+  /* Flip + pop court sur chiffre & unité */
+  .flip{ animation: flipIn 360ms cubic-bezier(.2,.9,.2,1); }
+  @keyframes flipIn{ 0%{ transform: rotateX(70deg); opacity:.55 } 60%{ transform: rotateX(-10deg); opacity:1 } 100%{ transform: rotateX(0) } }
+  .tick{ animation: pop 200ms ease-out; }
+  @keyframes pop{ 0%{ transform:scale(0.96) } 60%{ transform:scale(1.06) } 100%{ transform:scale(1) } }
+
+  .unit{
+    font-weight:900; font-size: clamp(26px, 7.2vh, 8.6vh);
+    margin-top: clamp(2px, .7vh, .9vh);
+  }
+
+  .offer{
+    display:inline-flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; max-width:92%;
+    font-weight:700; text-align:center; font-size: clamp(18px, 3vh, 4vh);
+    margin-top: clamp(6px, 1.6vh, 2vh);
+  }
+  .offer-img{
+    height: clamp(96px, 13vh, 18vh); width:auto; border-radius:16px; background:#fff; padding:8px;
+    box-shadow:0 14px 30px rgba(0,0,0,.35); outline:1px solid rgba(0,0,0,.06);
+    animation: bob 3.8s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-4px) } }
+
+  /* Accessibilité */
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important }
+  }
+
+  /* Shadow Drop Flash sur le panneau (à chaque update) */
+  .panel.flash{ animation: panelFlash 380ms ease-out; }
+  @keyframes panelFlash{
+    0%{ box-shadow: 0 28px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12); transform: translateZ(0) }
+    50%{ box-shadow: 0 46px 110px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.16); transform: translateZ(0) scale(1.002) }
+    100%{ box-shadow: 0 28px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12); transform: translateZ(0) }
+  }
 </style>
 </head>
 <body>
-  <main class="stage">
-    <div class="side-logo left"><img src="/static/quick-logo.jpg" alt=""></div>
-    <div class="side-logo right"><img src="/static/quick-logo.jpg" alt=""></div>
+  <!-- Init (Jinja côté serveur) -->
+  <meta id="init"
+        data-initial="{{ initial }}"
+        data-offer="{{ (offer or '') | e }}"
+        data-show-offer="{{ 'true' if show_offer else 'false' }}">
 
-    <header class="brand"><img src="/static/quick-logo.jpg" alt="Quick" /></header>
+  <main class="stage" id="stage">
+    <section class="panel" id="panel">
+      <!-- Effets : rétro-éclairage + pluie -->
+      <div class="borderPulse" aria-hidden="true"></div>
+      <div class="rain" aria-hidden="true"></div>
 
-    <section class="panel">
-      <div id="timeWrap" class="timeWrap">
-        <div class="headline">Ici vous serez servi en</div>
-        <div id="val" class="value">{{ initial }}</div>
+      <!-- Logos latéraux -->
+      <div class="brand-side brand-left" id="brandLeft">
+        <img src="/static/quick-logo.png" alt="Quick" />
+      </div>
+      <div class="brand-side brand-right" id="brandRight">
+        <img src="/static/quick-logo.png" alt="Quick" />
+      </div>
+
+      <!-- Contenu central -->
+      <div class="content" id="content">
+        <div class="headline">
+          <span class="commit">On s'engage&nbsp;!</span>
+          <span class="lead">Vous serez servi en</span>
+        </div>
+
+        <div class="valueWrap" id="valueWrap">
+          <canvas id="particles"></canvas>
+          <div id="val" class="value size-1">0</div>
+        </div>
+
         <div class="unit" id="unit">minutes</div>
-        <div id="offerWrap" class="offer {{ '' if (offer and show_offer) else 'hidden' }}">
+
+        <div id="offerWrap" class="offer hidden">
           <span id="offerText"></span>
           <img id="offerImg" src="/static/products/expresso.png" alt="Produit offert" class="offer-img">
         </div>
       </div>
     </section>
-
-    <footer class="footer">
-      <div class="badge">Affichage temps réel</div>
-      <div class="badge">Dernière mise à jour : <span id="last">–</span></div>
-    </footer>
   </main>
 
   <script>
-    const valueEl  = document.getElementById("val");
-    const unitEl   = document.getElementById("unit");
-    const offerWrap= document.getElementById("offerWrap");
-    const offerEl  = document.getElementById("offerText");
-    const offerImg = document.getElementById("offerImg");
-    const lastEl   = document.getElementById("last");
+    /* ===== DOM refs ===== */
+    const valueEl   = document.getElementById("val");
+    const unitEl    = document.getElementById("unit");
+    const offerWrap = document.getElementById("offerWrap");
+    const offerEl   = document.getElementById("offerText");
+    const offerImg  = document.getElementById("offerImg");
+    const initEl    = document.getElementById('init');
+    const wrapEl    = document.getElementById('valueWrap');
+    const panelEl   = document.getElementById('panel');
+    const brandLeft = document.getElementById('brandLeft');
+    const brandRight= document.getElementById('brandRight');
+    const canvas    = document.getElementById('particles');
+    const ctx       = canvas.getContext('2d');
 
+    /* ===== INIT ===== */
+    const INIT = {
+      initial: parseInt(initEl?.dataset.initial ?? '0', 10),
+      offer: (initEl?.dataset.offer ?? ''),
+      showOffer: (initEl?.dataset.showOffer ?? 'false') === 'true'
+    };
+
+    (function nightDim(){ // léger dim la nuit pour extérieur
+      const h = new Date().getHours();
+      const dim = (h >= 20 || h < 7) ? 0.9 : 1;
+      document.documentElement.style.setProperty('--dim', String(dim));
+    })();
+
+    /* ===== Produits pour l'offre ===== */
     const imgForOffer = (txt)=>{
       const t=(txt||"").toLowerCase();
       if(t.includes("muffin")) return "/static/products/muffinchocobanane.png";
@@ -87,28 +293,133 @@
       offerImg.src = imgForOffer(txt);
       offerImg.alt = "Produit offert : " + txt;
     }
+
+    /* ===== Taille adaptative + animations chiffre ===== */
+    function applyValueSizing(n){
+      valueEl.classList.remove("size-1","size-2","size-3");
+      const d = String(n).length;
+      valueEl.classList.add(d===1 ? "size-1" : d===2 ? "size-2" : "size-3");
+    }
+
+    function animateValue(){
+      // flip + pop sur valeur et unité
+      [valueEl, unitEl].forEach(el=>{
+        el.classList.remove('flip','tick'); void el.offsetWidth;
+        el.classList.add('flip','tick');
+      });
+      // gradient fill temporaire
+      valueEl.classList.remove('gradient'); void valueEl.offsetWidth;
+      valueEl.classList.add('gradient');
+
+      // flash du panneau
+      panelEl.classList.remove('flash'); void panelEl.offsetWidth;
+      panelEl.classList.add('flash');
+
+      burstParticles();
+      flareSides();
+    }
+
     function setValue(n){
       valueEl.textContent = String(n);
       unitEl.textContent = (n===1 ? "minute" : "minutes");
-      lastEl.textContent = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      applyValueSizing(n);
+      animateValue();
     }
 
+    /* ===== Particules (burst) ===== */
+    let particles = [];
+    function resizeCanvas(){
+      const rect = wrapEl.getBoundingClientRect();
+      canvas.width  = Math.ceil(rect.width  * devicePixelRatio);
+      canvas.height = Math.ceil(rect.height * devicePixelRatio);
+      canvas.style.width = rect.width + "px";
+      canvas.style.height= rect.height + "px";
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
+    function burstParticles(){
+      const rect = wrapEl.getBoundingClientRect();
+      const cx = rect.width/2, cy = rect.height/2;
+      const count = 28;
+      for(let i=0;i<count;i++){
+        const a = (Math.PI * 2) * (i / count) + Math.random()*0.4;
+        const sp = 2 + Math.random()*3;
+        particles.push({
+          x: cx, y: cy,
+          vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+          life: 520 + Math.random()*320,
+          size: 2 + Math.random()*3,
+          alpha: 1
+        });
+      }
+    }
+    let lastT=0;
+    function tickParticles(ts){
+      if(!lastT) lastT = ts;
+      const dt = ts - lastT; lastT = ts;
+
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const fade = dt * 0.0018;
+      for(let i=particles.length-1; i>=0; i--){
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.vx *= 0.985; p.vy *= 0.985;
+        p.alpha -= fade;
+        if(p.alpha <= 0){ particles.splice(i,1); continue; }
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.fill();
+      }
+      requestAnimationFrame(tickParticles);
+    }
+
+    /* ===== Logo flares ponctuels alternés ===== */
+    function flare(el){
+      el.classList.add('flare');
+      setTimeout(()=> el.classList.remove('flare'), 1200);
+    }
+    function scheduleSideFlares(){
+      const delay = 20000 + Math.random()*12000; // 20–32 s
+      setTimeout(()=>{
+        Math.random() < 0.5 ? flare(brandLeft) : flare(brandRight);
+        scheduleSideFlares();
+      }, delay);
+    }
+    function flareSides(){ // petit flare des deux côtés lors d’une MAJ
+      flare(brandLeft);
+      setTimeout(()=> flare(brandRight), 140);
+    }
+
+    /* ===== SSE ===== */
     function connect(){
       const evt = new EventSource("/stream");
       evt.onmessage = (ev)=>{
         const parts = String(ev.data||"").split("|");
         const w    = parts[0] ?? "0";
         const off  = parts[1] ?? "";
-        const mode = parts[2] ?? "dual";
+        const mode = parts[2] ?? "";   // lu mais pas utilisé pour rediriger
         const show = parts[3] ?? "1";
-        if (mode !== "dual"){ window.location.href = "/screen"; return; }
-        const n = parseInt(w,10); if(!Number.isNaN(n)) setValue(n);
+
+        // Optionnel : filtrer sans recharger si votre flux multiplexe plusieurs écrans
+        // const EXPECTED_MODE = "dual";
+        // if (mode && mode !== EXPECTED_MODE) return;
+
+        const n = parseInt(w,10);
+        if(!Number.isNaN(n)) setValue(n);
         setOffer(off, show === "1");
       };
       evt.onerror = ()=>{ evt.close(); setTimeout(connect, 1200); };
     }
 
-    setOffer({{ (offer or '') | tojson }}, {{ 'true' if show_offer else 'false' }});
+    /* ===== Boot ===== */
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    requestAnimationFrame(tickParticles);
+
+    setValue(INIT.initial);
+    setOffer(INIT.offer, INIT.showOffer);
+    scheduleSideFlares();
     connect();
   </script>
 </body>

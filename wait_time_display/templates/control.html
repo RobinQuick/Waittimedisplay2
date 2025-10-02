@@ -6,189 +6,287 @@
   <title>Contrôle — Quick</title>
   <link rel="icon" type="image/png" href="/static/favicon.png" />
   <style>
-    :root{ --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff; --glass:rgba(255,255,255,.08); --line:rgba(255,255,255,.22) }
-    *{box-sizing:border-box} html,body{height:100%}
+    :root{
+      --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff;
+      --glass:rgba(255,255,255,.07); --line:rgba(255,255,255,.18);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0; color:var(--q-white);
       font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-      background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
-      display:flex; flex-direction:column; gap:clamp(10px,2vh,20px)
+      background: radial-gradient(1200px 800px at 20% 10%, #ff5b5b 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
+      --fs: clamp(12px, 0.9vw + 0.2vh, 15px);
+      font-size:var(--fs);
+      min-height:100vh; display:flex; flex-direction:column; gap:10px;
     }
 
-    .brand{display:flex;align-items:center;gap:12px;justify-content:center;padding:clamp(10px,2.5vh,24px)}
-    .brand .logo{background:#fff;border-radius:16px;padding:6px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
-    .brand img{height:clamp(52px,7vh,90px);width:auto}
-    .brand .wordmark{font-weight:900;font-size:clamp(20px,3vh,34px)}
+    /* Bandeau marque compact */
+    .brand{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 12px}
+    .brand .logo{
+      width:38px;height:38px;border-radius:10px;background:#fff;color:var(--q-red-dark);
+      display:grid;place-items:center;font-weight:900;box-shadow:0 6px 18px rgba(0,0,0,.22)
+    }
+    .brand .wordmark{font-weight:900;font-size:18px;letter-spacing:.2px}
 
-    .shell{display:grid; grid-template-columns: 1.15fr 1fr; gap:18px; padding:0 3vw 3vh}
-    @media (max-width:1100px){ .shell{ grid-template-columns: 1fr; } }
+    /* Shell 2 colonnes : commandes / aperçu */
+    .shell{flex:1; padding:0 12px 12px; display:grid; place-items:start center}
+    .grid{
+      width:min(1180px, 96vw);
+      display:grid; gap:10px;
+      grid-template-columns: 1.05fr .95fr;
+    }
+    @media (max-width: 1100px){
+      .grid{ grid-template-columns: 1fr }
+    }
 
     .card{
-      background:var(--glass); backdrop-filter:blur(10px);
-      border:1.5px solid var(--line); border-radius:20px;
-      box-shadow:0 20px 50px rgba(0,0,0,.25);
-      padding:clamp(16px,2.2vh,24px);
+      background:var(--glass); backdrop-filter: blur(10px);
+      border:1px solid var(--line); border-radius:14px;
+      box-shadow:0 14px 36px rgba(0,0,0,.22);
+      padding:12px;
     }
-    h1{margin:0 0 10px 0; font-size:clamp(20px,3.2vh,28px)}
-    h2{margin:12px 0 8px; font-size:clamp(16px,2.4vh,22px); opacity:.95}
+    .card h1{margin:0 0 6px; font-size:1.15rem}
+    .section{padding:8px 10px; border:1px dashed var(--line); border-radius:12px; margin-top:8px}
+    .section h2{margin:0 0 6px; font-size:1rem; opacity:.95}
+    .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
 
-    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    /* Boutons */
     .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:.9rem 1.1rem; border:0; border-radius:12px;
+      display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      padding:.52rem .7rem; border:0; border-radius:10px; min-height:32px;
       background:var(--q-white); color:var(--q-red-dark);
-      font-weight:800; cursor:pointer; transition:transform .04s ease, box-shadow .2s ease;
-      box-shadow:0 6px 16px rgba(0,0,0,.25); user-select:none;
+      font-weight:800; cursor:pointer; transition: transform .06s ease, box-shadow .2s ease, opacity .2s ease;
+      box-shadow:0 8px 20px rgba(0,0,0,.18); user-select:none;
     }
-    .btn:hover{transform:translateY(-1px)}
-    .btn.ghost{ background:rgba(255,255,255,.12); color:#fff; border:1px solid var(--line); box-shadow:none; }
+    .btn:hover{ transform: translateY(-1px) }
+    .btn.ghost{ background:rgba(255,255,255,.12); color:#fff; border:1px solid var(--line) }
+    .btn[disabled]{opacity:.5; pointer-events:none}
 
-    input[type="number"], input[type="password"]{
-      flex:1; padding:.85rem 1rem; border-radius:12px;
-      border:1px solid rgba(255,255,255,.25);
-      background:rgba(0,0,0,.25); color:#fff; font-size:1.05rem; outline:none; min-height:46px;
+    /* Inputs */
+    input[type="number"], input[type="text"]{
+      width:110px; text-align:center;
+      padding:.5rem .6rem; border-radius:10px; min-height:32px;
+      border:1px solid rgba(255,255,255,.22);
+      background:rgba(0,0,0,.25); color:#fff; font-size:1rem; outline:none;
     }
-    input::placeholder{color:#ddd}
+    .grow{flex:1; min-width:180px; text-align:left}
 
-    .slider-wrap{margin:10px 0 4px}
-    input[type="range"]{ -webkit-appearance:none; width:100%; height:10px; border-radius:999px; background:rgba(255,255,255,.18); outline:none }
-    input[type="range"]::-webkit-slider-thumb{
-      -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
-      background:#fff; box-shadow:0 6px 14px rgba(0,0,0,.25); border:2px solid rgba(0,0,0,.05);
+    /* Slider */
+    .slider-wrap{margin:4px 0}
+    input[type="range"]{
+      appearance:none; -webkit-appearance:none;
+      width:100%; height:8px; border-radius:999px; background:rgba(255,255,255,.18); outline:none
+    }
+    input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+      background:#fff; box-shadow:0 6px 12px rgba(0,0,0,.22); border:2px solid rgba(0,0,0,.05) }
+    input[type="range"]::-moz-range-thumb{ width:20px; height:20px; border-radius:50%;
+      background:#fff; box-shadow:0 6px 12px rgba(0,0,0,.22); border:2px solid rgba(0,0,0,.05) }
+    input[type="range"]::-moz-range-track{ height:8px; border-radius:999px; background:rgba(255,255,255,.18) }
+
+    /* Chips offres (texte uniquement) */
+    .chips{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      background:rgba(0,0,0,.20); border:1px solid var(--line); color:#fff;
+      padding:.35rem .7rem; border-radius:999px; font-weight:700; cursor:pointer; transition:.2s
+    }
+    .chip:hover{ background:rgba(255,255,255,.12) }
+    .chip.active{ background:#fff; color:var(--q-red-dark) }
+
+    .switch{display:flex; align-items:center; gap:10px; margin:.25rem 0}
+    .switch input{ width:18px; height:18px }
+
+    /* Segmented control (uniforme) */
+    .seg{ display:inline-flex; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:rgba(0,0,0,.14) }
+    .seg button{
+      appearance:none; border:0; padding:.52rem .9rem; font-weight:800; cursor:pointer;
+      color:#fff; background:transparent; transition:.15s ease; min-height:36px;
+    }
+    .seg button + button{ border-left:1px solid var(--line) }
+    .seg button:is(:hover,:focus-visible){ background:rgba(255,255,255,.10) }
+    .seg button.is-active{
+      background:#fff; color:var(--q-red-dark); box-shadow:0 8px 20px rgba(0,0,0,.18);
     }
 
-    .presets{display:flex; gap:8px; flex-wrap:wrap}
-    .chip{ background:rgba(0,0,0,.22); border:1px solid var(--line); color:#fff;
-      padding:.45rem .8rem; border-radius:999px; font-weight:700; cursor:pointer }
-    .chip:hover{background:rgba(255,255,255,.12)}
-
-    .tiles{ display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top:8px }
-    .tile{
-      user-select:none; cursor:pointer; text-align:center;
-      padding:12px 10px; border-radius:14px; border:1px solid rgba(255,255,255,.18);
-      background:rgba(0,0,0,.20); font-weight:700;
-      transition: transform .08s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+    /* Aperçu 16:9 */
+    .preview-card{ padding:10px }
+    .preview-frame{
+      width:100%;
+      aspect-ratio:16 / 9;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: radial-gradient(1400px 800px at 20% 10%, #ff5b5b 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
+      position:relative; overflow:hidden;
+      display:grid; place-items:center;
     }
-    .tile:hover{ transform: translateY(-2px) }
-    .tile.active{ background:#fff; color:#B7161B; box-shadow:0 14px 28px rgba(0,0,0,.28); border-color:transparent }
-    .tile img{
-      max-height:70px; width:auto; display:block; margin:0 auto 8px;
-      background:#fff; border-radius:10px; padding:6px; box-shadow:0 6px 16px rgba(0,0,0,.25);
+    .preview-logo{
+      width:min(22vh, 160px); height:min(22vh, 160px);
+      border-radius:50%; background:#fff; color:var(--q-red-dark); display:grid; place-items:center;
+      font-weight:900; font-size: clamp(28px, 6.2vh, 42px); box-shadow:0 12px 30px rgba(0,0,0,.25)
     }
-    .tiles.disabled{ opacity:.55; pointer-events:none; }
-
-    .switch{display:flex; align-items:center; gap:10px; margin:.6rem 0}
-    .switch input{ width:20px; height:20px }
-
-    .preview{ position:relative; overflow:hidden; display:grid; place-items:center; min-height:260px }
-    .preview .frame{
-      width:100%; height:70vh; min-height:420px; border:0; border-radius:14px; transform: scale(.6);
-      transform-origin: top center; box-shadow:0 20px 50px rgba(0,0,0,.35);
-      pointer-events:none;
+    .preview-time{
+      position:absolute; inset:auto 0 10% 0; text-align:center;
+      font-weight:900; font-size: clamp(20px, 5.5vh, 44px);
+      text-shadow:0 6px 18px rgba(0,0,0,.35);
     }
-    .hint{opacity:.85; font-size:.95rem; margin-top:8px}
+    .preview-offer{
+      position:absolute; inset:auto 0 4% 0; text-align:center;
+      font-weight:800; font-size: clamp(14px, 2.7vh, 20px);
+      opacity:.96; filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))
+    }
+    .preview-dual{
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:3%;
+    }
+    .preview-dual .preview-logo{ width:min(16vh,120px); height:min(16vh,120px) }
 
+    /* Toast */
     .toast{
-      position:fixed; right:24px; bottom:24px; z-index:9;
-      background:#101010cc; color:#fff; padding:.9rem 1rem; border-radius:12px;
-      border:1px solid rgba(255,255,255,.18); box-shadow:0 14px 28px rgba(0,0,0,.35);
+      position:fixed; right:20px; bottom:20px; z-index:9;
+      background:#101010cc; color:#fff; padding:.8rem .9rem; border-radius:10px;
+      border:1px solid rgba(255,255,255,.18); box-shadow:0 12px 24px rgba(0,0,0,.28);
       transform: translateY(12px); opacity:0; pointer-events:none; transition:.25s ease;
     }
     .toast.show{ transform:none; opacity:1 }
 
-    .kbd{background:#00000033; border:1px solid #ffffff33; padding:2px 6px; border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    /* Modal PIN */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.45); display:none;
+      align-items:center; justify-content:center; z-index:50;
+    }
+    .modal-backdrop.open{ display:flex }
+    .modal{
+      width:min(92vw, 360px); background:var(--glass);
+      border:1px solid var(--line); border-radius:14px; padding:14px;
+      box-shadow:0 18px 44px rgba(0,0,0,.35); backdrop-filter: blur(10px);
+    }
+    .modal h3{ margin:0 0 10px; font-size:1.05rem }
+    .modal .row{ margin-top:8px; justify-content:flex-end }
+    .modal input[type="password"]{
+      width:100%; padding:.6rem .7rem; border-radius:10px; min-height:34px;
+      border:1px solid rgba(255,255,255,.22);
+      background:rgba(0,0,0,.25); color:#fff; font-size:1rem; outline:none;
+    }
   </style>
 </head>
 <body>
+  <!-- Données d'init -->
+  <meta id="init"
+        data-initial="{{ initial }}"
+        data-auto-offer="{{ 'true' if auto_offer else 'false' }}"
+        data-offer="{{ (offer or '') | e }}"
+        data-show-offer="{{ 'true' if show_offer else 'false' }}">
+
   <header class="brand">
-    <div class="logo"><img src="/static/quick-logo.jpg" alt="Quick" /></div>
+    <div class="logo">Q</div>
     <div class="wordmark">Quick — Contrôle</div>
   </header>
 
   <main class="shell">
-    <!-- COLONNE GAUCHE -->
-    <section class="card">
-      <h1>Temps d’attente</h1>
+    <div class="grid">
+      <!-- Colonne Commandes -->
+      <section class="card">
+        <h1>Réglages</h1>
 
-      <h2>Réglage rapide</h2>
-      <div class="row">
-        <button class="btn" id="dec5">-5</button>
-        <button class="btn" id="dec1">-1</button>
-        <input id="val" type="number" value="{{ initial }}" min="0" max="10" step="1"/>
-        <button class="btn" id="inc1">+1</button>
-        <button class="btn" id="inc5">+5</button>
-      </div>
-
-      <div class="slider-wrap">
-        <input id="range" type="range" min="0" max="10" value="{{ initial }}" />
-      </div>
-      <div class="presets">
-        <button class="chip" data-set="0">0 min</button>
-        <button class="chip" data-set="5">5 min</button>
-        <button class="chip" data-set="10">10 min</button>
-      </div>
-
-      <h2 style="margin-top:14px">Offre</h2>
-      <div class="switch">
-        <input type="checkbox" id="autoOffer" {{ 'checked' if auto_offer else '' }}/>
-        <label for="autoOffer">Offre auto selon l’heure</label>
-      </div>
-      <div class="switch">
-        <input type="checkbox" id="showOffer" {{ 'checked' if show_offer else '' }}/>
-        <label for="showOffer">Afficher le texte d’offre</label>
-      </div>
-
-      <div class="tiles" id="tiles">
-        <div class="tile" data-offer="un muffin choco banane">
-          <img src="/static/products/muffinchocobanane.png" alt="Muffin choco banane"><small>Muffin choco banane</small>
+        <div class="section">
+          <h2>Temps d’attente</h2>
+          <div class="row">
+            <button class="btn" id="dec1">-1</button>
+            <input id="val" type="number" value="{{ initial }}" min="0" max="10" step="1"/>
+            <button class="btn" id="inc1">+1</button>
+            <span style="opacity:.9">minute(s)</span>
+          </div>
+          <div class="slider-wrap">
+            <input id="range" type="range" min="0" max="10" value="{{ initial }}" />
+          </div>
+          <!-- Presets uniformisés -->
+          <div class="seg" id="segPresets" style="margin-top:6px">
+            <button type="button" data-set="0">0 min</button>
+            <button type="button" data-set="5">5 min</button>
+            <button type="button" data-set="10">10 min</button>
+          </div>
         </div>
-        <div class="tile" data-offer="un cookie trio choco">
-          <img src="/static/products/cookietriochoco.png" alt="Cookie trio choco"><small>Cookie trio choco</small>
-        </div>
-        <div class="tile" data-offer="un expresso">
-          <img src="/static/products/expresso.png" alt="Expresso"><small>Expresso</small>
-        </div>
-        <div class="tile" data-offer="un trio de beignets">
-          <img src="/static/products/trio.png" alt="Trio de beignets"><small>Trio de beignets</small>
-        </div>
-        <div class="tile" data-offer="un Bigout choco">
-          <img src="/static/products/bigout_choco.png" alt="Bigout choco"><small>Bigout choco</small>
-        </div>
-        <div class="tile" data-offer="des churros">
-          <img src="/static/products/churros.jpg" alt="Churros"><small>Churros</small>
-        </div>
-        <div class="tile" data-offer="un fondant choco">
-          <img src="/static/products/fondant.jpg" alt="Fondant choco"><small>Fondant choco</small>
-        </div>
-      </div>
 
-      <h2 style="margin-top:14px">Affichage</h2>
-      <div class="row">
-        <button class="btn ghost" id="modeTime">Afficher le temps</button>
-        <button class="btn" id="modeLogo">Logo seul</button>
-        <button class="btn" id="modeDual">Dual (logos latéraux)</button>
-      </div>
+        <div class="section">
+          <h2>Offre</h2>
+          <label class="switch">
+            <input type="checkbox" id="autoOffer" {{ 'checked' if auto_offer else '' }}/>
+            <span>Offre automatique selon l’heure</span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="showOffer" {{ 'checked' if show_offer else '' }}/>
+            <span>Afficher le texte d’offre</span>
+          </label>
 
-      <h2 style="margin-top:14px">Validation</h2>
-      <div class="row">
-        <input id="pin" type="password" placeholder="PIN (facultatif)" />
-        <button class="btn" id="save">Enregistrer</button>
-        <button class="btn ghost" id="saveOffer">Sauver l’offre seule</button>
-        <button class="btn ghost" id="clearOffer" title="Masquer l'offre sur l'affichage">Aucune offre</button>
-      </div>
+          <div class="row" style="margin-top:4px">
+            <div class="chips" id="chips">
+              <span class="chip" data-offer="un muffin choco banane">Muffin choco banane</span>
+              <span class="chip" data-offer="un cookie trio choco">Cookie trio choco</span>
+              <span class="chip" data-offer="un expresso">Expresso</span>
+              <span class="chip" data-offer="un trio de beignets">Trio de beignets</span>
+              <span class="chip" data-offer="un Bigout choco">Bigout choco</span>
+              <span class="chip" data-offer="des churros">Churros</span>
+              <span class="chip" data-offer="un fondant choco">Fondant choco</span>
+            </div>
+          </div>
 
-      <p class="hint">Raccourcis : <span class="kbd">←</span>/<span class="kbd">→</span> = -/+ 1 •
-        <span class="kbd">Shift</span>+<span class="kbd">←/→</span> = -/+ 5 •
-        <span class="kbd">Enter</span> = Enregistrer</p>
-    </section>
+          <div class="row" style="margin-top:8px">
+            <input id="offerCustom" class="grow" type="text" placeholder="Saisir une offre personnalisée (optionnel)" />
+            <button class="btn ghost" id="clearOffer">Aucune offre</button>
+          </div>
+        </div>
 
-    <!-- COLONNE DROITE : APERÇU LIVE -->
-    <aside class="card preview">
-      <h1 style="margin-bottom:8px">Aperçu live</h1>
-      <iframe class="frame" id="preview" src="/screen"></iframe>
-      <p class="hint">Aperçu non interactif (sécurisé). Le display réel se met à jour en temps réel.</p>
-    </aside>
+        <div class="section">
+          <h2>Affichage</h2>
+          <div class="seg" id="modeSeg">
+            <button id="modeTime"  type="button" class="is-active">Afficher le temps</button>
+            <button id="modeLogo"  type="button">Logo seul</button>
+            <button id="modeDual"  type="button">Dual (logos latéraux)</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Validation</h2>
+          <div class="row">
+            <button class="btn" id="save">Enregistrer</button>
+            <button class="btn ghost" id="saveOffer">Sauver l’offre seule</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Colonne Aperçu -->
+      <section class="card preview-card">
+        <h1>Aperçu</h1>
+        <div class="preview-frame" id="preview">
+          <!-- MODE LOGO (par défaut) -->
+          <div class="preview-logo" data-part="logo">Q</div>
+
+          <!-- MODE DUAL -->
+          <div class="preview-dual" data-part="dual" style="display:none">
+            <div class="preview-logo">Q</div>
+            <div class="preview-logo">Q</div>
+          </div>
+
+          <!-- Temps & Offre (affichés selon mode) -->
+          <div class="preview-time" data-part="time" style="display:none">0 min</div>
+          <div class="preview-offer" data-part="offer" style="display:none">—</div>
+        </div>
+        <div style="opacity:.8;margin-top:6px">L’aperçu reflète le mode, le temps et la visibilité de l’offre.</div>
+      </section>
+    </div>
   </main>
+
+  <!-- Modal PIN -->
+  <div class="modal-backdrop" id="pinModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+      <h3 id="pinTitle">Validation requise</h3>
+      <p style="margin:.2rem 0 .6rem; opacity:.9">Saisir le PIN :</p>
+      <input id="pinInput" type="password" autocomplete="one-time-code" placeholder="PIN" />
+      <div class="row">
+        <button class="btn ghost" id="pinCancel">Annuler</button>
+        <button class="btn" id="pinOk">Valider</button>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="toast">✅ Mis à jour</div>
 
@@ -196,161 +294,262 @@
     const $  = s => document.querySelector(s);
     const $$ = s => Array.from(document.querySelectorAll(s));
 
+    // Eléments
     const val = $('#val'), range = $('#range');
     const autoOffer = $('#autoOffer'), showOffer = $('#showOffer');
-    const tilesWrap = $('#tiles'), toast = $('#toast');
-    const previewFrame = $('#preview');
+    const chipsWrap = $('#chips'), toast = $('#toast');
+    const offerCustom = $('#offerCustom');
+    const segPresets = $('#segPresets');
 
-    const showToast = (msg='✅ Mis à jour') => { toast.textContent = msg; toast.classList.add('show'); setTimeout(()=> toast.classList.remove('show'), 1600); };
-    const setValue  = n => { n = Math.max(0, Math.min(10, parseInt(n||'0',10))); val.value = n; range.value = n; };
-    const activeTile= () => $('.tile.active');
+    // Aperçu
+    const pv = {
+      frame: $('#preview'),
+      logo:  $('[data-part="logo"]'),
+      dual:  $('[data-part="dual"]'),
+      time:  $('[data-part="time"]'),
+      offer: $('[data-part="offer"]')
+    };
+    let currentMode = 'time'; // par défaut UI sur "Afficher le temps" visuellement
 
-    function holdButton(btn, delta){
-      let timer=null; const step = ()=> setValue(parseInt(val.value||'0',10)+delta);
-      btn.addEventListener('mousedown', ()=>{ step(); timer=setInterval(step, 120); });
-      ['mouseup','mouseleave','blur'].forEach(ev=> btn.addEventListener(ev, ()=>{ if(timer) clearInterval(timer), timer=null; }));
-      btn.addEventListener('touchstart', e=>{ e.preventDefault(); step(); timer=setInterval(step, 120); }, {passive:false});
-      btn.addEventListener('touchend', ()=>{ if(timer) clearInterval(timer), timer=null; });
+    // Init via <meta id="init">
+    const initEl = document.getElementById('init');
+    const INIT = {
+      initial: parseInt(initEl?.dataset.initial ?? '0', 10),
+      autoOffer: (initEl?.dataset.autoOffer ?? 'false') === 'true',
+      offer: (initEl?.dataset.offer ?? ''),
+      showOffer: (initEl?.dataset.showOffer ?? 'false') === 'true'
+    };
+
+    const showToast = (msg='✅ Mis à jour') => { toast.textContent = msg; toast.classList.add('show'); setTimeout(()=> toast.classList.remove('show'), 1500); };
+
+    /* ---------- Preview helpers ---------- */
+    function setModeLocal(mode){
+      currentMode = mode;
+      pv.logo.style.display = (mode === 'logo') ? 'grid' : 'none';
+      pv.dual.style.display = (mode === 'dual') ? 'flex' : 'none';
+      pv.time.style.display = (mode === 'time') ? 'block' : 'none';
+      updatePreview();
+      syncModeButtons();
     }
-    holdButton($('#dec5'), -5); holdButton($('#dec1'), -1); holdButton($('#inc1'), +1); holdButton($('#inc5'), +5);
+
+    function getSelectedOfferText(){
+      if (autoOffer.checked) return '';
+      const activeChip = chipsWrap.querySelector('.chip.active');
+      const custom = (offerCustom.value || '').trim();
+      return custom || (activeChip ? activeChip.dataset.offer : '');
+    }
+
+    function updatePreview(){
+      pv.time.textContent = `${parseInt(val.value||'0',10)} min`;
+      const text = getSelectedOfferText();
+      const visible = showOffer.checked && (!!text || autoOffer.checked);
+      pv.offer.style.display = visible ? 'block' : 'none';
+      pv.offer.textContent = autoOffer.checked ? 'Offre automatique' : (text || '—');
+      syncPresetButtons();
+    }
+
+    /* ---------- Segmented controls sync ---------- */
+    function syncModeButtons(){
+      const map = { time:'#modeTime', logo:'#modeLogo', dual:'#modeDual' };
+      ['#modeTime','#modeLogo','#modeDual'].forEach(sel=>$(sel).classList.remove('is-active'));
+      $(map[currentMode])?.classList.add('is-active');
+    }
+    function syncPresetButtons(){
+      const v = parseInt(val.value||'0',10);
+      segPresets.querySelectorAll('button').forEach(b=>b.classList.remove('is-active'));
+      const btn = segPresets.querySelector(`button[data-set="${v}"]`);
+      if (btn) btn.classList.add('is-active');
+    }
+
+    /* ---------- Contrôles Temps ---------- */
+    function clamp01(x){ return Math.max(0, Math.min(10, x)); }
+    function setValue(n){ n = clamp01(parseInt(n||'0',10)); val.value = n; range.value = n; updatePreview(); }
+    function nudge(delta){ setValue(parseInt(val.value||'0',10) + delta); }
+
+    $('#dec1').addEventListener('click', ()=> nudge(-1));
+    $('#inc1').addEventListener('click', ()=> nudge(+1));
     val.addEventListener('input', e=> setValue(e.target.value));
     range.addEventListener('input', e=> setValue(e.target.value));
-    $$('.chip').forEach(c=> c.addEventListener('click', ()=> setValue(c.dataset.set)));
 
-    // ---------- API helper ----------
+    // Presets (segmented)
+    segPresets.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click', ()=> setValue(b.dataset.set));
+    });
+
+    /* ---------- Offres (chips + champ libre) ---------- */
+    function clearChipActive(){ $$('.chip').forEach(x => x.classList.remove('active')); }
+
+    $$('#chips .chip').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        if (autoOffer.checked) return;
+        const wasActive = chip.classList.contains('active');
+        clearChipActive();
+        if (!wasActive) chip.classList.add('active');
+        offerCustom.value = '';
+        updatePreview();
+      });
+    });
+
+    offerCustom.addEventListener('input', ()=>{
+      if (autoOffer.checked) { offerCustom.value=''; return; }
+      clearChipActive();
+      updatePreview();
+    });
+
+    autoOffer.addEventListener('change', ()=>{
+      if (autoOffer.checked){
+        clearChipActive();
+        offerCustom.value = '';
+      }
+      updatePreview();
+    });
+
+    /* ---------- PIN modal ---------- */
+    const pinModal = $('#pinModal');
+    const pinInput = $('#pinInput');
+    const pinOk    = $('#pinOk');
+    const pinCancel= $('#pinCancel');
+
+    function askPin() {
+      return new Promise((resolve) => {
+        pinModal.classList.add('open');
+        setTimeout(()=> pinInput.focus(), 0);
+
+        function close(v){
+          pinModal.classList.remove('open');
+          pinInput.value='';
+          window.removeEventListener('keydown', onKey);
+          pinOk.removeEventListener('click', onOk);
+          pinCancel.removeEventListener('click', onCancel);
+          pinModal.removeEventListener('click', onBackdrop);
+          resolve(v);
+        }
+        const onOk = ()=> close(pinInput.value || '');
+        const onCancel = ()=> close(null);
+        const onBackdrop = (e)=>{ if (e.target === pinModal) close(null); };
+        const onKey = (e)=>{ if (e.key === 'Enter') onOk(); if (e.key === 'Escape') onCancel(); };
+
+        pinOk.addEventListener('click', onOk);
+        pinCancel.addEventListener('click', onCancel);
+        pinModal.addEventListener('click', onBackdrop);
+        window.addEventListener('keydown', onKey);
+      });
+    }
+
+    /* ---------- POST helpers ---------- */
     async function post(url, fd){
       const r = await fetch(url, { method:'POST', body: fd });
-      if (!r.ok) { let msg=`HTTP ${r.status}`; try{ const j=await r.json(); if(j?.detail) msg += ` — ${typeof j.detail==='string'?j.detail:(j.detail[0]?.msg||'')}`; }catch{}; throw new Error(msg); }
+      if (!r.ok) {
+        let msg=`HTTP ${r.status}`;
+        try{ const j=await r.json(); if(j?.detail) msg += ` — ${typeof j.detail==='string'?j.detail:(j.detail[0]?.msg||'')}`; }catch{}
+        throw new Error(msg);
+      }
       return r.json();
     }
-    // Rendez l’offre visible (ignore si la route n’existe pas déjà)
-    async function setOfferVisibility(enabled){
-      showOffer.checked = !!enabled;
+
+    async function setOfferVisibility(enabled, pin=''){
       try{
         const fd = new FormData();
         if (enabled) fd.append('enabled','true');
-        const pin = $('#pin').value; if (pin) fd.append('pin', pin);
+        if (pin) fd.append('pin', pin);
         await post('/offer_visibility', fd);
-      }catch(_){} 
+      }catch(_){}
     }
 
-    // ---------- Tuile cliquée = POST /offer + visibilité ON + refresh preview ----------
-    $$('.tile').forEach(t => t.addEventListener('click', async ()=>{
-      $$('.tile').forEach(x => x.classList.remove('active'));
-      t.classList.add('active');
-      autoOffer.checked = false;
-      tilesWrap.classList.remove('disabled');
-
-      try{
-        const fd = new FormData();
-        fd.append('value', t.dataset.offer);
-        const pin = $('#pin').value; if (pin) fd.append('pin', pin);
-        await post('/offer', fd);
-
-        if (!showOffer.checked) await setOfferVisibility(true);
-
-        showToast('✅ Offre appliquée');
-        previewFrame.contentWindow.location.reload();
-      }catch(e){ alert('Erreur offre: ' + (e?.message || '')); }
-    }));
-
-    // ---------- Init tuiles ----------
-    (function initTiles(){
-      if ({{ 'true' if auto_offer else 'false' }}) {
-        tilesWrap.classList.add('disabled');
-      } else {
-        const prefer = ({{ (offer or '') | tojson }} || '').toLowerCase();
-        let pick = null;
-        if (prefer) pick = $$('.tile').find(x => prefer.split(' ').some(k => x.dataset.offer.toLowerCase().includes(k)));
-        if (!pick) pick = $('.tile');
-        if (pick){ pick.classList.add('active'); }
-      }
-    })();
-
-    // ---------- Sauvegardes explicites ----------
-    async function saveWait(){
+    async function saveWait(pin){
       const fd = new FormData();
       fd.append('value', val.value);
-      const pin = $('#pin').value; if (pin) fd.append('pin', pin);
+      if (pin) fd.append('pin', pin);
       await post('/wait', fd);
     }
-    async function saveOffer(){
-      const pin = $('#pin').value || '';
+    async function saveOffer(pin){
       if (autoOffer.checked){
         const fd = new FormData(); fd.append('enabled','true'); if (pin) fd.append('pin', pin);
         await post('/auto_offer', fd);
       } else {
-        const act = activeTile();
-        if (act){
-          const fd = new FormData(); fd.append('value', act.dataset.offer); if (pin) fd.append('pin', pin);
-          await post('/offer', fd);
-          if (!showOffer.checked) await setOfferVisibility(true);
-        }
+        const text = getSelectedOfferText();
+        const fd = new FormData(); fd.append('value', text); if (pin) fd.append('pin', pin);
+        await post('/offer', fd);
       }
     }
-
-    showOffer.addEventListener('change', async ()=>{
-      await setOfferVisibility(showOffer.checked);
-      showToast('✅ Visibilité offre mise à jour');
-      previewFrame.contentWindow.location.reload();
-    });
-
-    async function setMode(mode){
-      const pin = $('#pin').value || '';
+    async function setModeServer(mode, pin){
       const fd = new FormData(); fd.append('value', mode); if (pin) fd.append('pin', pin);
       await post('/mode', fd);
-      previewFrame.src = '/screen';
     }
-    $('#modeLogo').addEventListener('click', ()=> setMode('logo').then(()=> showToast('🅀 Logo seul activé')).catch(e=>alert(e)));
-    $('#modeTime').addEventListener('click', ()=> setMode('time').then(()=> showToast('⏱️ Afficher le temps')).catch(e=>alert(e)));
-    $('#modeDual').addEventListener('click', ()=> setMode('dual').then(()=> showToast('🅀 Mode dual')).catch(e=>alert(e)));
 
-    autoOffer.addEventListener('change', async ()=>{
-      if (autoOffer.checked){
-        $$('.tile').forEach(x => x.classList.remove('active'));
-        tilesWrap.classList.add('disabled');
-        const fd = new FormData(); fd.append('enabled','true'); const pin = $('#pin').value||''; if (pin) fd.append('pin', pin);
-        await post('/auto_offer', fd);
-        showToast('✅ Offre auto activée');
-      } else {
-        tilesWrap.classList.remove('disabled');
-        showToast('ℹ️ Offre auto désactivée');
-      }
+    /* ---------- Affichage (segmented) ---------- */
+    async function setMode(mode){
+      const pin = await askPin();
+      if (pin === null) return;
+      await setModeServer(mode, pin);
+      setModeLocal(mode);
+      showToast(mode==='time'?'⏱️ Afficher le temps': mode==='logo'?'🅀 Logo seul activé':'🅀 Mode dual');
+    }
+    $('#modeLogo').addEventListener('click', ()=> setMode('logo').catch(e=>alert(e)));
+    $('#modeTime').addEventListener('click', ()=> setMode('time').catch(e=>alert(e)));
+    $('#modeDual').addEventListener('click', ()=> setMode('dual').catch(e=>alert(e)));
+
+    /* ---------- Actions ---------- */
+    showOffer.addEventListener('change', async ()=>{
+      const pin = await askPin();
+      if (pin === null){ showOffer.checked = !showOffer.checked; return; }
+      await setOfferVisibility(showOffer.checked, pin);
+      updatePreview();
+      showToast('✅ Visibilité offre mise à jour');
     });
 
     $('#clearOffer').addEventListener('click', async ()=>{
+      const pin = await askPin();
+      if (pin === null) return;
       try{
         autoOffer.checked = false;
-        $$('.tile').forEach(x => x.classList.remove('active'));
-        tilesWrap.classList.remove('disabled');
-
-        const fd = new FormData(); fd.append('value','');
-        const pin = $('#pin').value||''; if (pin) fd.append('pin', pin);
+        clearChipActive();
+        offerCustom.value = '';
+        const fd = new FormData(); fd.append('value',''); if (pin) fd.append('pin', pin);
         await post('/offer', fd);
-
-        await setOfferVisibility(false);
+        await setOfferVisibility(false, pin);
+        updatePreview();
         showToast('✅ Offre masquée');
-        previewFrame.contentWindow.location.reload();
       }catch(e){ alert('Erreur : '+(e?.message||'')); }
     });
 
     $('#save').addEventListener('click', async ()=>{
-      try{ await saveWait(); await saveOffer(); showToast(); previewFrame.contentWindow.location.reload(); }
+      const pin = await askPin();
+      if (pin === null) return;
+      try{ await saveWait(pin); await saveOffer(pin); showToast(); }
       catch(e){ alert('Erreur enregistrement : ' + (e?.message||'')); }
     });
 
     $('#saveOffer').addEventListener('click', async ()=>{
-      try{ await saveOffer(); showToast('✅ Offre mise à jour'); previewFrame.contentWindow.location.reload(); }
+      const pin = await askPin();
+      if (pin === null) return;
+      try{ await saveOffer(pin); showToast('✅ Offre mise à jour'); }
       catch(e){ alert('Erreur offre : ' + (e?.message||'')); }
     });
 
+    /* ---------- Initialisation ---------- */
+    (function initChips(){
+      if (!INIT.autoOffer && INIT.offer){
+        const target = $$('#chips .chip').find(c => (c.dataset.offer||'').toLowerCase() === (INIT.offer||'').toLowerCase());
+        if (target) target.classList.add('active');
+        else offerCustom.value = INIT.offer || '';
+      }
+      if (INIT.autoOffer) autoOffer.checked = true;
+      if (INIT.showOffer) showOffer.checked = true;
+    })();
+
+    setValue(INIT.initial);
+    // UI par défaut : “Afficher le temps”
+    setModeLocal('time');
+    updatePreview();
+
+    // Raccourcis discrets
     window.addEventListener('keydown', (e)=>{
-      if (e.key === 'ArrowRight') { setValue(parseInt(val.value||'0',10) + (e.shiftKey?5:1)); }
-      if (e.key === 'ArrowLeft')  { setValue(parseInt(val.value||'0',10) - (e.shiftKey?5:1)); }
+      if (e.target && ['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+      if (e.key === 'ArrowRight') nudge(1);
+      if (e.key === 'ArrowLeft')  nudge(-1);
       if (e.key === 'Enter') { $('#save').click(); }
     });
-
-    setValue({{ initial }});
   </script>
 </body>
 </html>
