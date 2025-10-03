@@ -2,192 +2,312 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Temps d'attente — Quick</title>
 <link rel="icon" type="image/png" href="/static/favicon.png" />
 <style>
   :root{
     --q-red:#E31E24; --q-red-dark:#B7161B; --q-white:#fff;
-    /* Écart minimal */
-    --gap-v: 4px; 
-    --gap-h: 4px;
-    --logoH: clamp(150px, 22vh, 260px);
+    --logoH: 140px;  /* Taille fixe pour contrôle précis */
     --dim: 1;
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  .hidden{display:none !important;}
+  
+  /* Force dimensions exactes */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1920px !important;
+    height: 1080px !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .hidden { display: none !important; }
 
-  /* ===== BACKGROUND global ===== */
-  body{
-    margin:0; color:var(--q-white);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  /* Background */
+  body {
+    color: var(--q-white);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     background: radial-gradient(1200px 800px at 20% 10%, #ff5151 0%, var(--q-red) 40%, var(--q-red-dark) 100%);
   }
-  .stage{position:relative; width:100vw; height:100vh; overflow:hidden; filter:brightness(var(--dim));}
+  
+  .stage {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    filter: brightness(var(--dim));
+  }
 
-  .panel{
-    position:absolute;
-    top:var(--gap-v); bottom:var(--gap-v);
-    left:var(--gap-h); right:var(--gap-h);
-    border-radius:22px;
-    background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 28px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
-    display:flex; align-items:center; justify-content:center;
-    padding:3.2vh 4vw;                /* un peu plus d’espace pour grand écran */
+  /* Panel - sans marges pour utiliser tout l'écran */
+  .panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.15);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 20px 50px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 40px;
     transform: translateZ(0);
   }
-  /* Fond cyclique (léger) */
-  .panel::before{
-    content:"";
-    position:absolute; inset:-8% -4% -12% -8%; pointer-events:none;
-    background:
-      radial-gradient(40% 30% at var(--spot-x,20%) var(--spot-y,30%), rgba(255,255,255,.14), transparent 60%),
-      radial-gradient(60% 40% at 80% 10%, rgba(255,255,255,.06), transparent 70%);
-    mix-blend-mode: screen; opacity:.6; filter: blur(12px);
+  
+  /* Fond animé léger */
+  .panel::before {
+    content: "";
+    position: absolute;
+    inset: -5%;
+    pointer-events: none;
+    background: radial-gradient(40% 30% at var(--spot-x,20%) var(--spot-y,30%), rgba(255,255,255,.12), transparent 60%);
+    mix-blend-mode: screen;
+    opacity: .5;
     animation: spot 22s ease-in-out infinite alternate;
   }
-  @keyframes spot{
-    0%  { --spot-x:20%; --spot-y:30%; }
-    100%{ --spot-x:75%; --spot-y:60%; }
+  @keyframes spot {
+    0%   { --spot-x: 20%; --spot-y: 30%; }
+    100% { --spot-x: 75%; --spot-y: 60%; }
   }
 
-  /* Bordures pulsées */
-  .borderPulse{ position:absolute; inset:0; border-radius:inherit; pointer-events:none; box-shadow:0 0 0 2px rgba(255,255,255,.45) inset; opacity:.35; animation:borderPulse 5s ease-in-out infinite; }
-  @keyframes borderPulse{ 0%,100%{opacity:.25} 50%{opacity:.6} }
+  /* Bordure pulsée subtile */
+  .borderPulse {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.4) inset;
+    opacity: .3;
+    animation: borderPulse 5s ease-in-out infinite;
+  }
+  @keyframes borderPulse {
+    0%, 100% { opacity: .2; }
+    50% { opacity: .5; }
+  }
 
-  /* Pluie douce */
-  .rain{ position:absolute; inset:0; border-radius:inherit; pointer-events:none; overflow:hidden; }
-  .rain::before{
-    content:""; position:absolute; inset:-30% 0 -30% 0;
-    background: linear-gradient(to bottom, rgba(255,255,255,.16), rgba(255,255,255,0) 60%);
+  /* Pluie */
+  .rain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .rain::before {
+    content: "";
+    position: absolute;
+    inset: -30% 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,.14), rgba(255,255,255,0) 60%);
     -webkit-mask: repeating-linear-gradient(to right, rgba(0,0,0,0) 0 20px, rgba(0,0,0,1) 20px 21px);
-            mask: repeating-linear-gradient(to right, rgba(0,0,0,0) 0 20px, rgba(0,0,0,1) 20px 21px);
-    opacity:.22; filter: blur(.2px);
+    mask: repeating-linear-gradient(to right, rgba(0,0,0,0) 0 20px, rgba(0,0,0,1) 20px 21px);
+    opacity: .2;
     animation: rainSlide 8s linear infinite;
   }
-  @keyframes rainSlide{ from{ transform:translateY(-8%) } to{ transform:translateY(8%) } }
+  @keyframes rainSlide {
+    from { transform: translateY(-8%); }
+    to { transform: translateY(8%); }
+  }
 
-  /* ===== Logo ===== */
-  .brand{
-    position:absolute; top:calc(var(--gap-v) + 0.6vh); left:0; right:0;
-    display:flex; align-items:center; justify-content:center;
-    z-index:3; pointer-events:none;
+  /* Logo - position fixe en haut */
+  .brand {
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    pointer-events: none;
     animation: dropin 500ms ease-out both;
   }
-  .brand img{height: var(--logoH); width:auto; display:block; position:relative}
-  @keyframes dropin{ from{opacity:0; transform:translateY(-12px)} to{opacity:1; transform:none} }
-  .brand.flare::before{
-    content:""; position:absolute; width:140%; height:58%;
-    top:18%; left:-20%; pointer-events:none;
-    background: linear-gradient(120deg, rgba(255,255,255,0), rgba(255,255,255,.85), rgba(255,255,255,0));
-    filter: blur(12px); opacity:.48;
+  .brand img {
+    height: var(--logoH);
+    width: auto;
+    display: block;
+  }
+  @keyframes dropin {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: none; }
+  }
+  
+  .brand.flare::before {
+    content: "";
+    position: absolute;
+    width: 140%;
+    height: 60%;
+    top: 20%;
+    left: -20%;
+    pointer-events: none;
+    background: linear-gradient(120deg, rgba(255,255,255,0), rgba(255,255,255,.8), rgba(255,255,255,0));
+    filter: blur(12px);
+    opacity: .45;
     animation: logoFlare 1100ms ease-out;
   }
-  @keyframes logoFlare{ from{ transform: translateX(-60%) rotate(10deg) } to{ transform: translateX(60%) rotate(10deg) } }
-
-  /* ===== Bloc central ===== */
-  .timeWrap{
-    width:100%; height:100%;
-    display:flex; flex-direction:column; align-items:center; text-align:center;
-    justify-content:center;
-    gap: clamp(12px, 1.8vh, 2.4vh);
-    padding-top: calc(var(--logoH) * 1.08);
+  @keyframes logoFlare {
+    from { transform: translateX(-60%) rotate(10deg); }
+    to { transform: translateX(60%) rotate(10deg); }
   }
 
-  .headline{
-    font-weight:800; letter-spacing:.2px; opacity:.98;
-    line-height:1.12;
-    font-size: clamp(28px, 5.5vh, 6.5vh);   /* plus grand */
-    margin:0;
+  /* Contenu central - bien espacé */
+  .timeWrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    gap: 16px;
+    padding-top: 160px; /* Espace pour le logo */
   }
-  .headline .commit{ display:block; font-weight:900; }
-  .headline .lead{ display:block; font-weight:800; }
 
-  /* ===== Valeur SANS GLOW ===== */
-  .value{
-    font-weight:900; line-height:0.95; letter-spacing:.02em;
-    text-align:center; color:#fff;
-    text-shadow: none !important;      /* suppression du glow */
-    margin-top: clamp(6px, .9vh, 1.1vh);
+  /* Titre - taille optimale pour lisibilité */
+  .headline {
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    opacity: .98;
+    line-height: 1.1;
+    font-size: 48px; /* Fixe pour contrôle précis */
+    margin: 0;
+  }
+  .headline .commit {
+    display: block;
+    font-weight: 900;
+  }
+  .headline .lead {
+    display: block;
+    font-weight: 800;
+  }
+
+  /* Valeur - TRÈS GRANDE pour visibilité de loin */
+  .value {
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    text-align: center;
+    color: #fff;
+    text-shadow: none;
+    margin-top: 10px;
     will-change: transform;
   }
-  .value.size-1{ font-size: clamp(120px, 31vh, 34vh); } /* 0–9 : encore plus grand */
-  .value.size-2{ font-size: clamp(110px, 26vh, 28vh); } /* 10–99 */
-  .value.size-3{ font-size: clamp(96px, 22vh, 24vh); }  /* 100+ */
+  .value.size-1 { font-size: 280px; } /* 0-9 : ÉNORME */
+  .value.size-2 { font-size: 240px; } /* 10-99 */
+  .value.size-3 { font-size: 200px; } /* 100+ */
 
-  /* Gradient fill bref à l’update (garde la lisibilité sans glow) */
-  .value.gradient{
+  /* Gradient à l'update */
+  .value.gradient {
     color: transparent;
     background: linear-gradient(180deg, #ffffff 0%, #ffd0d0 40%, #ffffff 80%);
     background-size: 100% 200%;
-    -webkit-background-clip:text; background-clip:text;
+    -webkit-background-clip: text;
+    background-clip: text;
     animation: gradFlow 600ms ease-out both;
   }
-  @keyframes gradFlow{ from{ background-position: 0% 0% } to{ background-position: 0% 100% } }
-
-  /* Animations courte valeur & unité */
-  .flip{ animation: flipIn 360ms cubic-bezier(.2,.9,.2,1); }
-  @keyframes flipIn{ 0%{ transform: rotateX(70deg); opacity:.55 } 60%{ transform: rotateX(-10deg); opacity:1 } 100%{ transform: rotateX(0) } }
-  .tick{ animation: pop 200ms ease-out; }
-  @keyframes pop{ 0%{ transform:scale(0.96) } 60%{ transform:scale(1.06) } 100%{ transform:scale(1) } }
-
-  .unit{
-    font-weight:900; 
-    font-size: clamp(30px, 8vh, 9.2vh);  /* plus grand */
-    margin-top: clamp(6px, .9vh, 1.2vh);
+  @keyframes gradFlow {
+    from { background-position: 0% 0%; }
+    to { background-position: 0% 100%; }
   }
 
-  /* ===== Particules (burst) ===== */
-  .valueWrap{ position:relative; display:inline-grid; place-items:center; }
-  #particles{
-    position:absolute; inset:0; width:120%; height:120%;
-    transform: translateZ(0); pointer-events:none;
+  /* Animations */
+  .flip { animation: flipIn 360ms cubic-bezier(.2,.9,.2,1); }
+  @keyframes flipIn {
+    0% { transform: rotateX(70deg); opacity: .55; }
+    60% { transform: rotateX(-10deg); opacity: 1; }
+    100% { transform: rotateX(0); }
+  }
+  
+  .tick { animation: pop 200ms ease-out; }
+  @keyframes pop {
+    0% { transform: scale(0.96); }
+    60% { transform: scale(1.06); }
+    100% { transform: scale(1); }
   }
 
-  /* ===== Offre : texte + image zoom/dezoom ===== */
-  .offer{
-    display:inline-flex; align-items:center; justify-content:center; gap:1.2rem; flex-wrap:wrap; max-width:92%;
-    font-weight:700; text-align:center; 
-    font-size: clamp(22px, 3.6vh, 4.4vh); /* un peu plus grand */
-    margin-top: clamp(10px, 1.8vh, 2.6vh);
+  /* Unité */
+  .unit {
+    font-weight: 900;
+    font-size: 72px; /* Grande mais pas écrasante */
+    margin-top: 10px;
   }
+
+  /* Particules */
+  .valueWrap {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+  }
+  #particles {
+    position: absolute;
+    inset: 0;
+    width: 120%;
+    height: 120%;
+    transform: translateZ(0);
+    pointer-events: none;
+  }
+
+  /* Offre - bien visible avec image */
+  .offer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    max-width: 90%;
+    font-weight: 700;
+    text-align: center;
+    font-size: 36px; /* Taille lisible de loin */
+    margin-top: 20px;
+  }
+  
   .product-zoom {
     animation: pulse-zoom 6s ease-in-out infinite;
     transform-origin: 50% 50%;
   }
-  @keyframes pulse-zoom{
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.12); }   /* zoom visible de loin */
-    100% { transform: scale(1); }
+  @keyframes pulse-zoom {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); } /* Zoom visible */
   }
-  .offer-img{
-    height: clamp(140px, 20vh, 28vh);  /* beaucoup plus visible */
-    width:auto; border-radius:16px; background:#fff; padding:10px;
-    box-shadow:0 18px 36px rgba(0,0,0,.35); outline:1px solid rgba(0,0,0,.06);
-    /* Remplace l’ancien "bob" par zoom/dezoom */
-  }
-
-  .footer, .badge{display:none !important;}
-
-  /* Accessibilité */
-  @media (prefers-reduced-motion: reduce){
-    *{ animation:none !important; transition:none !important }
+  
+  .offer-img {
+    height: 180px; /* Taille fixe, bien visible */
+    width: auto;
+    border-radius: 16px;
+    background: #fff;
+    padding: 12px;
+    box-shadow: 0 16px 32px rgba(0,0,0,.35);
+    outline: 1px solid rgba(0,0,0,.06);
   }
 
-  /* Flash discret du panneau à l’update */
-  .panel.flash{ animation: panelFlash 380ms ease-out; }
-  @keyframes panelFlash{
-    0%{ box-shadow: 0 28px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12); transform: translateZ(0) }
-    50%{ box-shadow: 0 46px 110px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.16); transform: translateZ(0) scale(1.002) }
-    100%{ box-shadow: 0 28px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12); transform: translateZ(0) }
+  /* Flash du panel à l'update */
+  .panel.flash {
+    animation: panelFlash 380ms ease-out;
+  }
+  @keyframes panelFlash {
+    0% {
+      box-shadow: 0 20px 50px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.1);
+      transform: translateZ(0);
+    }
+    50% {
+      box-shadow: 0 40px 90px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.15);
+      transform: translateZ(0) scale(1.002);
+    }
+    100% {
+      box-shadow: 0 20px 50px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.1);
+      transform: translateZ(0);
+    }
+  }
+
+  /* Réduire animations si préférence utilisateur */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 </style>
 </head>
 <body>
-  <!-- Init (Jinja côté serveur) -->
   <meta id="init"
         data-initial="{{ initial }}"
         data-offer="{{ (offer or '') | e }}"
@@ -208,7 +328,6 @@
           <span class="lead">Vous serez servi en</span>
         </div>
 
-        <!-- VALUE + particules -->
         <div class="valueWrap" id="valueWrap">
           <canvas id="particles"></canvas>
           <div id="val" class="value size-1">0</div>
@@ -225,150 +344,178 @@
   </main>
 
   <script>
-    /* ===== DOM refs ===== */
-    const valueEl   = document.getElementById("val");
-    const unitEl    = document.getElementById("unit");
+    const valueEl = document.getElementById("val");
+    const unitEl = document.getElementById("unit");
     const offerWrap = document.getElementById("offerWrap");
-    const offerEl   = document.getElementById("offerText");
-    const offerImg  = document.getElementById("offerImg");
-    const initEl    = document.getElementById('init');
-    const wrapEl    = document.getElementById('valueWrap');
-    const panelEl   = document.getElementById('panel');
-    const brandEl   = document.getElementById('brand');
-    const canvas    = document.getElementById('particles');
-    const ctx       = canvas.getContext('2d');
+    const offerEl = document.getElementById("offerText");
+    const offerImg = document.getElementById("offerImg");
+    const initEl = document.getElementById('init');
+    const wrapEl = document.getElementById('valueWrap');
+    const panelEl = document.getElementById('panel');
+    const brandEl = document.getElementById('brand');
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
 
-    /* ===== INIT ===== */
     const INIT = {
       initial: parseInt(initEl?.dataset.initial ?? '0', 10),
       offer: (initEl?.dataset.offer ?? ''),
       showOffer: (initEl?.dataset.showOffer ?? 'false') === 'true'
     };
 
-    (function nightDim(){ // léger dim la nuit pour extérieur
+    // Dim nocturne
+    (function nightDim(){
       const h = new Date().getHours();
       const dim = (h >= 20 || h < 7) ? 0.9 : 1;
       document.documentElement.style.setProperty('--dim', String(dim));
     })();
 
-    /* ===== Produits pour l'offre ===== */
-    const imgForOffer = (txt)=>{
-      const t=(txt||"").toLowerCase();
-      if(t.includes("muffin")) return "/static/products/muffinchocobanane.png";
-      if(t.includes("cookie")) return "/static/products/cookietriochoco.png";
-      if(t.includes("café")||t.includes("expresso")) return "/static/products/expresso.png";
-      if(t.includes("beignet")||t.includes("trio")) return "/static/products/trio.png";
-      if(t.includes("bigout")) return "/static/products/bigout_choco.png";
-      if(t.includes("churros")) return "/static/products/churros.jpg";
-      if(t.includes("fondant")) return "/static/products/fondant.jpg";
+    // Produits
+    const imgForOffer = (txt) => {
+      const t = (txt || "").toLowerCase();
+      if (t.includes("muffin")) return "/static/products/muffinchocobanane.png";
+      if (t.includes("cookie")) return "/static/products/cookietriochoco.png";
+      if (t.includes("café") || t.includes("expresso")) return "/static/products/expresso.png";
+      if (t.includes("beignet") || t.includes("trio")) return "/static/products/trio.png";
+      if (t.includes("bigout")) return "/static/products/bigout_choco.png";
+      if (t.includes("churros")) return "/static/products/churros.jpg";
+      if (t.includes("fondant")) return "/static/products/fondant.jpg";
       return "/static/products/expresso.png";
     };
 
-    function setOffer(txt, show){
+    function setOffer(txt, show) {
       txt = (txt ?? "").trim();
-      if(!txt || !show){ offerWrap.classList.add('hidden'); return; }
+      if (!txt || !show) {
+        offerWrap.classList.add('hidden');
+        return;
+      }
       offerWrap.classList.remove('hidden');
-      offerEl.textContent = "Sinon, on vous offre " + txt.replace(/espresso/i,'expresso');
+      offerEl.textContent = "Sinon, on vous offre " + txt.replace(/espresso/i, 'expresso');
       offerImg.src = imgForOffer(txt);
       offerImg.alt = "Produit offert : " + txt;
-      // s'assure que l'animation de zoom redémarre à chaque changement
-      offerImg.classList.remove('product-zoom'); void offerImg.offsetWidth; offerImg.classList.add('product-zoom');
+      offerImg.classList.remove('product-zoom');
+      void offerImg.offsetWidth;
+      offerImg.classList.add('product-zoom');
     }
 
-    /* ===== Taille + animations chiffre ===== */
-    function applyValueSizing(n){
-      valueEl.classList.remove("size-1","size-2","size-3");
+    function applyValueSizing(n) {
+      valueEl.classList.remove("size-1", "size-2", "size-3");
       const d = String(n).length;
-      valueEl.classList.add(d===1 ? "size-1" : d===2 ? "size-2" : "size-3");
+      valueEl.classList.add(d === 1 ? "size-1" : d === 2 ? "size-2" : "size-3");
     }
 
-    function animateValue(){
-      [valueEl, unitEl].forEach(el=>{
-        el.classList.remove('flip','tick'); void el.offsetWidth;
-        el.classList.add('flip','tick');
+    function animateValue() {
+      [valueEl, unitEl].forEach(el => {
+        el.classList.remove('flip', 'tick');
+        void el.offsetWidth;
+        el.classList.add('flip', 'tick');
       });
-      valueEl.classList.remove('gradient'); void valueEl.offsetWidth;
+      valueEl.classList.remove('gradient');
+      void valueEl.offsetWidth;
       valueEl.classList.add('gradient');
-      panelEl.classList.remove('flash'); void panelEl.offsetWidth;
+      panelEl.classList.remove('flash');
+      void panelEl.offsetWidth;
       panelEl.classList.add('flash');
       burstParticles();
     }
 
-    function setValue(n){
+    function setValue(n) {
       valueEl.textContent = String(n);
-      unitEl.textContent = (n===1 ? "minute" : "minutes");
+      unitEl.textContent = (n === 1 ? "minute" : "minutes");
       applyValueSizing(n);
       animateValue();
     }
 
-    /* ===== Particules (burst) ===== */
+    // Particules
     let particles = [];
-    function resizeCanvas(){
+    function resizeCanvas() {
       const rect = wrapEl.getBoundingClientRect();
-      canvas.width  = Math.ceil(rect.width  * devicePixelRatio);
+      canvas.width = Math.ceil(rect.width * devicePixelRatio);
       canvas.height = Math.ceil(rect.height * devicePixelRatio);
       canvas.style.width = rect.width + "px";
-      canvas.style.height= rect.height + "px";
+      canvas.style.height = rect.height + "px";
       ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
     }
-    function burstParticles(){
+
+    function burstParticles() {
       const rect = wrapEl.getBoundingClientRect();
-      const cx = rect.width/2, cy = rect.height/2;
+      const cx = rect.width / 2, cy = rect.height / 2;
       const count = 28;
-      for(let i=0;i<count;i++){
-        const a = (Math.PI * 2) * (i / count) + Math.random()*0.4;
-        const sp = 2 + Math.random()*3;
-        particles.push({ x: cx, y: cy, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 520 + Math.random()*320, size: 2 + Math.random()*3, alpha: 1 });
+      for (let i = 0; i < count; i++) {
+        const a = (Math.PI * 2) * (i / count) + Math.random() * 0.4;
+        const sp = 2 + Math.random() * 3;
+        particles.push({
+          x: cx, y: cy,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp,
+          life: 520 + Math.random() * 320,
+          size: 2 + Math.random() * 3,
+          alpha: 1
+        });
       }
     }
-    let lastT=0;
-    function tickParticles(ts){
-      if(!lastT) lastT = ts;
-      const dt = ts - lastT; lastT = ts;
 
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+    let lastT = 0;
+    function tickParticles(ts) {
+      if (!lastT) lastT = ts;
+      const dt = ts - lastT;
+      lastT = ts;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       const fade = dt * 0.0018;
-      for(let i=particles.length-1; i>=0; i--){
+      for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        p.x += p.vx; p.y += p.vy;
-        p.vx *= 0.985; p.vy *= 0.985;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.985;
+        p.vy *= 0.985;
         p.alpha -= fade;
-        if(p.alpha <= 0){ particles.splice(i,1); continue; }
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
         ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-        ctx.fillStyle = "rgba(255,255,255,0.95)"; ctx.fill();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.fill();
       }
       requestAnimationFrame(tickParticles);
     }
 
-    /* ===== Logo flare ponctuel ===== */
-    function scheduleLogoFlare(){
-      const delay = 22000 + Math.random()*12000;
-      setTimeout(()=>{
+    // Logo flare
+    function scheduleLogoFlare() {
+      const delay = 22000 + Math.random() * 12000;
+      setTimeout(() => {
         brandEl.classList.add('flare');
-        setTimeout(()=> brandEl.classList.remove('flare'), 1200);
+        setTimeout(() => brandEl.classList.remove('flare'), 1200);
         scheduleLogoFlare();
       }, delay);
     }
 
-    /* ===== SSE ===== */
-    function connect(){
+    // SSE
+    function connect() {
       const evt = new EventSource("/stream");
-      evt.onmessage = (ev)=>{
-        const parts = String(ev.data||"").split("|");
-        const w    = parts[0] ?? "0";
-        const off  = parts[1] ?? "";
+      evt.onmessage = (ev) => {
+        const parts = String(ev.data || "").split("|");
+        const w = parts[0] ?? "0";
+        const off = parts[1] ?? "";
         const mode = parts[2] ?? "time";
         const show = parts[3] ?? "1";
-        if (mode !== "time"){ window.location.href = "/screen"; return; }
-        const n = parseInt(w,10);
-        if(!Number.isNaN(n)) setValue(n);
+        if (mode !== "time") {
+          window.location.href = "/screen";
+          return;
+        }
+        const n = parseInt(w, 10);
+        if (!Number.isNaN(n)) setValue(n);
         setOffer(off, show === "1");
       };
-      evt.onerror = ()=>{ evt.close(); setTimeout(connect, 1200); };
+      evt.onerror = () => {
+        evt.close();
+        setTimeout(connect, 1200);
+      };
     }
 
-    /* ===== Boot ===== */
+    // Boot
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     requestAnimationFrame(tickParticles);
